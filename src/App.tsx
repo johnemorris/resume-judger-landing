@@ -1,7 +1,44 @@
+import { Routes, Route, Link } from "react-router-dom";
+import Analyze from "./pages/Analyze";
+import Report from "./pages/Report";
 import { useState } from "react";
 
+/**
+ * Root App
+ */
 export default function App() {
-  // 🔁 REPLACE with your real Formspree endpoint
+  return (
+    <>
+      <Nav />
+
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/analyze" element={<Analyze />} />
+        <Route path="/report" element={<Report />} />
+      </Routes>
+    </>
+  );
+}
+
+/**
+ * Simple top nav (temporary)
+ */
+function Nav() {
+  return (
+    <nav style={{ padding: 16 }}>
+      <Link to="/" style={{ marginRight: 12 }}>
+        Home
+      </Link>
+      <Link to="/analyze">Analyze</Link>
+    </nav>
+  );
+}
+
+/**
+ * Landing page (your coming-soon page)
+ * You can polish or refactor later — this is intentionally simple.
+ */
+function Landing() {
   const FORM_ENDPOINT = "https://formspree.io/f/xdanpqdj";
 
   const [email, setEmail] = useState("");
@@ -20,10 +57,7 @@ export default function App() {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          email,
-          source: "coming-soon",
-        }),
+        body: JSON.stringify({ email }),
       });
 
       if (res.ok) {
@@ -39,124 +73,75 @@ export default function App() {
 
   return (
     <div className="container">
-      {/* Top badges */}
       <div className="badgeRow">
-        <span className="badge">ResumeJudger</span>
-        <span className="badge">Job-specific scoring</span>
-        <span className="badge">Exact edits</span>
-        <span className="badge">Learning paths</span>
+        <span className="badge">Coming Soon</span>
+        <span className="badge">Resume Feedback</span>
+        <span className="badge">Job-Specific</span>
       </div>
 
-      <div className="grid">
-        {/* LEFT COLUMN */}
-        <div>
-          <h1>
-            See exactly why your resume gets rejected — and how to fix it fast.
-          </h1>
+      <h1>
+        See exactly why your resume gets rejected — and how to fix it fast.
+      </h1>
 
-          <p>
-            Paste a job description and your resume. Get a clear match score,
-            exact edits, and learning paths to close gaps quickly.
-          </p>
+      <p>
+        Paste a job description and your resume. Get a clear match score, exact
+        edits, and guidance on how to close skill gaps.
+      </p>
 
-          {/* MAIN CARD */}
-          <div className="card">
-            <p style={{ marginBottom: 8, fontWeight: 700 }}>What you’ll get</p>
-            <ul>
-              <li>Compares your resume against real job descriptions</li>
-              <li>Shows exactly what to change (not generic advice)</li>
-              <li>
-                Recommends tutorials and mini-projects to close missing skills
-                fast
-              </li>
-            </ul>
+      <div className="card">
+        <p style={{ fontWeight: 700, marginBottom: 8 }}>Launching soon</p>
+        <p className="small">Want early access and discounted pricing?</p>
 
-            <hr />
+        <form onSubmit={handleSubmit}>
+          <div className="formRow">
+            <input
+              type="email"
+              required
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={status === "sending" || status === "success"}
+            />
 
-            <p style={{ marginBottom: 6, fontWeight: 700 }}>
-              Launching soon — want early access?
-            </p>
-            <p className="small">
-              Be the first to try it and get early-access pricing.
-            </p>
-
-            {/* EMAIL FORM */}
-            <form onSubmit={handleSubmit}>
-              <div className="formRow">
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  placeholder="you@example.com"
-                  aria-label="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={status === "sending" || status === "success"}
-                />
-
-                <button
-                  type="submit"
-                  disabled={status === "sending" || status === "success"}
-                >
-                  {status === "sending" ? "Sending..." : "Notify me"}
-                </button>
-              </div>
-
-              {status === "success" && (
-                <p className="small" style={{ marginTop: 10 }}>
-                  ✅ Thanks! You’re on the list. We’ll email you when it’s
-                  ready.
-                </p>
-              )}
-
-              {status === "error" && (
-                <p className="small" style={{ marginTop: 10 }}>
-                  ⚠️ Something went wrong. Please try again.
-                </p>
-              )}
-
-              <p className="small" style={{ marginTop: 10 }}>
-                Expected launch price: <strong>$5–$9</strong> per analysis
-              </p>
-            </form>
+            <button
+              type="submit"
+              disabled={status === "sending" || status === "success"}
+            >
+              {status === "sending" ? "Sending..." : "Notify me"}
+            </button>
           </div>
 
-          {/* PLANNED FEATURES */}
-          <div className="card" style={{ marginTop: 16 }}>
-            <p style={{ marginBottom: 8, fontWeight: 700 }}>
-              Planned after launch
+          {status === "success" && (
+            <p className="small" style={{ marginTop: 10 }}>
+              ✅ Thanks! You’re on the list.
             </p>
-            <ul>
-              <li>Interview prep links (Glassdoor, Reddit, LinkedIn)</li>
-              <li>Company-specific resume insights</li>
-              <li>Iteration tracking across applications</li>
-            </ul>
-          </div>
+          )}
 
-          <footer>
-            © {new Date().getFullYear()} ResumeJudger · Built for busy engineers
-          </footer>
-        </div>
+          {status === "error" && (
+            <p className="small" style={{ marginTop: 10 }}>
+              ⚠️ Something went wrong. Try again.
+            </p>
+          )}
 
-        {/* RIGHT COLUMN */}
-        <div className="card">
-          <p style={{ marginBottom: 10, fontWeight: 700 }}>
-            Preview (sample report)
+          <p className="small" style={{ marginTop: 10 }}>
+            Expected launch price: <strong>$5–$9</strong>
           </p>
-
-          <div className="mock">
-            Screenshot coming soon
-            <div className="small" style={{ marginTop: 8 }}>
-              Match score · Surgical edits · Gap learning paths
-            </div>
-          </div>
-
-          <p className="small" style={{ marginTop: 12 }}>
-            Tip: Once you have the report UI, drop a screenshot here. It boosts
-            signups.
-          </p>
-        </div>
+        </form>
       </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <p style={{ fontWeight: 700, marginBottom: 8 }}>Planned after launch</p>
+        <ul>
+          <li>Clear resume ↔ job matching</li>
+          <li>Exact edits (not rewrites)</li>
+          <li>Learning paths to close gaps</li>
+          <li>Interview prep links</li>
+        </ul>
+      </div>
+
+      <footer style={{ marginTop: 32 }}>
+        © {new Date().getFullYear()} · Built for job seekers
+      </footer>
     </div>
   );
 }
