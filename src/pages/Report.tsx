@@ -1,7 +1,96 @@
 import { mockReport } from "../mock/report";
 
+const STORAGE_KEY = "rj_input_v1";
+
 function pct(n: number) {
   return `${Math.max(0, Math.min(100, n))}%`;
+}
+
+function getStoredInput(): {
+  jd: string;
+  resume: string;
+  savedAtISO?: string;
+} | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.jd !== "string" || typeof parsed?.resume !== "string")
+      return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function normalize(s: string) {
+  return s.toLowerCase();
+}
+
+function extractKeywords(jd: string) {
+  // Minimal high-signal keywords for your target roles.
+  // Later: derive from JD, detect phrases, weight by requirement frequency, etc.
+  const known = [
+    "react",
+    "typescript",
+    "node",
+    "node.js",
+    "aws",
+    "lambda",
+    "ecs",
+    "eks",
+    "dynamodb",
+    "s3",
+    "terraform",
+    "cloudformation",
+    "ci/cd",
+    "cicd",
+    "devops",
+    "graphql",
+    "microservices",
+    "observability",
+    "jest",
+    "cypress",
+    "storybook",
+    "accessibility",
+    "a11y",
+  ];
+
+  const jdN = normalize(jd);
+
+  // Only keep ones that appear in the JD (so we don't show irrelevant badges).
+  return known.filter((k) => {
+    const token = k.replace("/", "");
+    return jdN.includes(k) || jdN.includes(token);
+  });
+}
+
+function splitMatchedMissing(keywords: string[], resume: string) {
+  const r = normalize(resume);
+  const matched: string[] = [];
+  const missing: string[] = [];
+
+  for (const k of keywords) {
+    const token = k.replace("/", "");
+    if (r.includes(k) || r.includes(token)) matched.push(k);
+    else missing.push(k);
+  }
+  return { matched, missing };
+}
+
+function guessCompany(jd: string) {
+  // Crude heuristic: find "at X" in the first part of JD
+  const head = jd.slice(0, 400);
+  const m = head.match(/\bat\s+([A-Z][A-Za-z0-9&.\- ]{2,50})/);
+  return m?.[1]?.trim();
+}
+
+function guessRole(jd: string) {
+  const head = jd.slice(0, 250);
+  const m = head.match(/^(.*?)(?:\n|·|$)/);
+  const firstLine = m?.[1]?.trim();
+  if (!firstLine) return undefined;
+  return firstLine.length <= 80 ? firstLine : undefined;
 }
 
 function TruthBadge({ t }: { t: string }) {
@@ -15,6 +104,19 @@ function TruthBadge({ t }: { t: string }) {
 
 export default function Report() {
   const r = mockReport;
+
+  const input = getStoredInput();
+  const jd = input?.jd ?? "";
+  const resume = input?.resume ?? "";
+
+  const company = jd ? guessCompany(jd) : undefined;
+  const roleGuess = jd ? guessRole(jd) : undefined;
+
+  const keywords = jd ? extractKeywords(jd) : [];
+  const { matched, missing } =
+    keywords.length > 0
+      ? splitMatchedMissing(keywords, resume)
+      : { matched: [], missing: [] };
 
   const breakdownEntries = [
     ["Frontend (React/TS)", r.scores.breakdown.frontendReactTypescript],
@@ -36,8 +138,78 @@ export default function Report() {
         <strong>{r.meta.overallFit}</strong>
       </p>
 
+      {!input && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <p style={{ margin: 0 }}>
+            No job description/resume found. Go to{" "}
+            <a href="/analyze">Analyze</a> and paste your text first.
+          </p>
+        </div>
+      )}
+
+      {/* INPUTS + KEYWORD MATCH */}
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3 style={{ marginTop: 0 }}>Your Inputs</h3>
+
+        <p className="small" style={{ marginTop: 6 }}>
+          {roleGuess ? (
+            <>
+              Role detected: <strong>{roleGuess}</strong>
+            </>
+          ) : (
+            <>
+              Role detected: <strong>(not detected)</strong>
+            </>
+          )}
+          {company ? (
+            <>
+              {" "}
+              · Company: <strong>{company}</strong>
+            </>
+          ) : null}
+        </p>
+
+        {keywords.length === 0 ? (
+          <p className="small" style={{ marginTop: 10 }}>
+            Paste a job description on the Analyze page to see keyword matching.
+          </p>
+        ) : (
+          <>
+            <p className="small" style={{ marginTop: 10 }}>
+              Keyword match (basic): <strong>{matched.length}</strong> matched ·{" "}
+              <strong>{missing.length}</strong> missing
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                marginTop: 10,
+              }}
+            >
+              {matched.slice(0, 12).map((k) => (
+                <span key={`m-${k}`} className="badge">
+                  ✅ {k}
+                </span>
+              ))}
+              {missing.slice(0, 12).map((k) => (
+                <span key={`x-${k}`} className="badge">
+                  ⚠️ {k}
+                </span>
+              ))}
+            </div>
+
+            <p className="small" style={{ marginTop: 10 }}>
+              Note: this is a simple match check for now — AI scoring and deeper
+              gap detection come next.
+            </p>
+          </>
+        )}
+      </div>
+
       {/* OVERVIEW */}
-      <div className="card">
+      <div className="card" style={{ marginTop: 16 }}>
         <h2 style={{ marginTop: 0 }}>Overall Match</h2>
         <div style={{ fontSize: 44, fontWeight: 800, marginTop: 6 }}>
           {r.scores.overall} / 100
@@ -57,6 +229,7 @@ export default function Report() {
               <span>{label}</span>
               <strong>{score}</strong>
             </div>
+
             <div
               style={{
                 height: 10,
@@ -101,6 +274,7 @@ export default function Report() {
               <strong>{g.gap}</strong>
               <span className="badge">{g.priority.toUpperCase()}</span>
             </div>
+
             <p className="small" style={{ marginTop: 6 }}>
               {g.whyItMatters}
             </p>
@@ -120,6 +294,7 @@ export default function Report() {
                   )
                 </span>
               </li>
+
               <li>
                 🛠 Mini project:{" "}
                 <a
@@ -133,6 +308,7 @@ export default function Report() {
                   ({g.fastTrack.project.time} · {g.fastTrack.project.provider})
                 </span>
               </li>
+
               <li>
                 🎓 Optional deep dive:{" "}
                 <a
@@ -145,6 +321,7 @@ export default function Report() {
                 <span className="small">
                   ({g.fastTrack.optionalDeepDive.time} ·{" "}
                   {g.fastTrack.optionalDeepDive.provider})
+                  {g.fastTrack.optionalDeepDive.affiliate ? " · affiliate" : ""}
                 </span>
               </li>
             </ul>
@@ -162,10 +339,12 @@ export default function Report() {
               <strong>{req.requirement}</strong>
               <span className="badge">{req.status.toUpperCase()}</span>
             </div>
+
             <p className="small" style={{ marginTop: 6 }}>
               <strong>Evidence:</strong>{" "}
               {req.evidenceQuote || "No evidence found in resume."}
             </p>
+
             {req.status !== "met" && (
               <p className="small">
                 <strong>To improve:</strong> {req.whatWouldMakeItMet}
@@ -213,9 +392,17 @@ function SectionEdits({
   return (
     <div>
       <p style={{ margin: 0, fontWeight: 700 }}>{title}</p>
+
       {edits.map((e, idx) => (
         <div key={idx} style={{ marginTop: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
             <span className="badge">{e.where}</span>
             <span className="badge">{e.editType}</span>
             <TruthBadge t={e.truthfulness} />
