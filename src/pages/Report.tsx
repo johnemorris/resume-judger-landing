@@ -1,6 +1,16 @@
 import { mockReport } from "../mock/report";
 
-const STORAGE_KEY = "rj_input_v1";
+const STORAGE_KEY = "rj_last_input_v1";
+
+/** --- text utils --- */
+function normalizeText(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[-_/]/g, " ")
+    .replace(/[^\w\s+]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function pct(n: number) {
   return `${Math.max(0, Math.min(100, n))}%`;
@@ -12,7 +22,7 @@ function getStoredInput(): {
   savedAtISO?: string;
 } | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (typeof parsed?.jd !== "string" || typeof parsed?.resume !== "string")
@@ -23,64 +33,9 @@ function getStoredInput(): {
   }
 }
 
-function normalize(s: string) {
-  return s.toLowerCase();
-}
-
-function extractKeywords(jd: string) {
-  // Minimal high-signal keywords for your target roles.
-  // Later: derive from JD, detect phrases, weight by requirement frequency, etc.
-  const known = [
-    "react",
-    "typescript",
-    "node",
-    "node.js",
-    "aws",
-    "lambda",
-    "ecs",
-    "eks",
-    "dynamodb",
-    "s3",
-    "terraform",
-    "cloudformation",
-    "ci/cd",
-    "cicd",
-    "devops",
-    "graphql",
-    "microservices",
-    "observability",
-    "jest",
-    "cypress",
-    "storybook",
-    "accessibility",
-    "a11y",
-  ];
-
-  const jdN = normalize(jd);
-
-  // Only keep ones that appear in the JD (so we don't show irrelevant badges).
-  return known.filter((k) => {
-    const token = k.replace("/", "");
-    return jdN.includes(k) || jdN.includes(token);
-  });
-}
-
-function splitMatchedMissing(keywords: string[], resume: string) {
-  const r = normalize(resume);
-  const matched: string[] = [];
-  const missing: string[] = [];
-
-  for (const k of keywords) {
-    const token = k.replace("/", "");
-    if (r.includes(k) || r.includes(token)) matched.push(k);
-    else missing.push(k);
-  }
-  return { matched, missing };
-}
-
+/** --- heuristics: role/company guess --- */
 function guessCompany(jd: string) {
-  // Crude heuristic: find "at X" in the first part of JD
-  const head = jd.slice(0, 400);
+  const head = jd.slice(0, 450);
   const m = head.match(/\bat\s+([A-Z][A-Za-z0-9&.\- ]{2,50})/);
   return m?.[1]?.trim();
 }
@@ -93,6 +48,295 @@ function guessRole(jd: string) {
   return firstLine.length <= 80 ? firstLine : undefined;
 }
 
+/** --- keyword extraction (no AI) --- */
+
+// Phrases we keep together (v1, extend as we see real JDs)
+const PHRASES = [
+  "object oriented",
+  "object-oriented",
+  "full stack",
+  "front end",
+  "back end",
+  "ci/cd",
+  "cloud based",
+  "cloud-based",
+  "cloud native",
+  "cloud-native",
+  "real time",
+  "real-time",
+  "high performance",
+  "high-performance",
+  "micro services",
+  "micro-services",
+  "unit testing",
+  "integration testing",
+];
+
+// Never filter these out even if they appear in "junk"
+const HARD_SKILLS = new Set([
+  "react",
+  "typescript",
+  "javascript",
+  "node",
+  "node js",
+  "sql",
+  "rdbms",
+  "aws",
+  "azure",
+  "gcp",
+  "cloud",
+  "kubernetes",
+  "docker",
+  "eks",
+  "ecs",
+  "lambda",
+  "dynamodb",
+  "s3",
+  "graphql",
+  "rest",
+  "microservices",
+  "ci",
+  "cd",
+  "cicd",
+  "devops",
+  "terraform",
+  "cloudformation",
+  "jest",
+  "cypress",
+  "storybook",
+  "accessibility",
+  "a11y",
+  "next js",
+  "nextjs",
+  "redux",
+]);
+
+// Junk / boilerplate terms we want to ignore (v1 baseline)
+const junk = new Set([
+  // time / quantity
+  "years",
+  "year",
+  "yrs",
+  "yr",
+  "plus",
+  "over",
+  "under",
+  "minimum",
+  "maximum",
+
+  // generic experience fluff
+  "experience",
+  "experienced",
+  "strong",
+  "skills",
+  "skill",
+  "ability",
+  "abilities",
+  "knowledge",
+  "familiarity",
+  "proficient",
+  "expert",
+  "expertise",
+
+  // job-title noise
+  "software",
+  "developer",
+  "engineer",
+  "engineers",
+  "senior",
+  "junior",
+  "lead",
+  "staff",
+
+  // work environment filler
+  "work",
+  "working",
+  "environment",
+  "team",
+  "teams",
+  "collaboration",
+  "collaborative",
+  "fast",
+  "paced",
+  "dynamic",
+  "culture",
+
+  // development fluff
+  "development",
+  "developing",
+  "design",
+  "designed",
+  "implement",
+  "implemented",
+  "implementation",
+  "build",
+  "building",
+  "maintain",
+  "maintaining",
+
+  // JD boilerplate
+  "required",
+  "requirements",
+  "preferred",
+  "nice",
+  "have",
+  "must",
+  "should",
+  "responsibilities",
+  "role",
+  "position",
+
+  // employment / eligibility noise
+  "visa",
+  "visas",
+  "sponsorship",
+  "sponsor",
+  "citizen",
+  "citizens",
+  "citizenship",
+  "green",
+  "card",
+  "c2c",
+  "w2",
+  "contract",
+  "full",
+  "time",
+  "remote",
+  "hybrid",
+  "united",
+  "states",
+  "us",
+  "u s",
+
+  // legal / HR boilerplate
+  "equal",
+  "opportunity",
+  "employer",
+  "race",
+  "gender",
+  "sexual",
+  "orientation",
+  "religion",
+  "disability",
+  "age",
+
+  // fragments/noise seen in JDs
+  "3rd",
+  "third",
+  "party",
+  "parties",
+  "etc",
+  "and",
+  "or",
+  "with",
+  "without",
+]);
+
+function extractPhraseMatches(jd: string) {
+  const text = normalizeText(jd);
+  const found = new Set<string>();
+
+  for (const phrase of PHRASES) {
+    const p = normalizeText(phrase);
+    if (p && text.includes(p)) found.add(p);
+  }
+  return found;
+}
+
+function removePhrasesFromText(text: string, phrases: Set<string>) {
+  let t = text;
+  phrases.forEach((p) => {
+    // remove all occurrences to avoid splitting into parts
+    t = t.split(p).join(" ");
+  });
+  return normalizeText(t);
+}
+
+function extractFromSkillsSection(jd: string) {
+  const skillsMatch = jd.match(/skills\s*:\s*([\s\S]{0,1000})/i);
+  return skillsMatch ? skillsMatch[1] : "";
+}
+
+function extractKeywords(jd: string) {
+  const phraseMatches = extractPhraseMatches(jd);
+
+  // normalize JD and remove phrases before tokenization
+  const normalized = normalizeText(jd);
+  const withoutPhrases = removePhrasesFromText(normalized, phraseMatches);
+
+  // Pull from skills section too (helps focus)
+  const skillsChunk = normalizeText(extractFromSkillsSection(jd));
+
+  // Acronyms in skills chunk: SQL, RDBMS, etc.
+  // We already normalized to lowercase, so we won't capture uppercase here.
+  // Instead, we extract common acronyms via a small allow-list:
+  const commonAcronyms = ["sql", "rdbms", "oop"];
+  const acronymsFound = new Set<string>();
+  for (const a of commonAcronyms) {
+    if (skillsChunk.includes(a)) acronymsFound.add(a);
+  }
+
+  // Tokenize combined text: "withoutPhrases" + "skillsChunk" to increase recall
+  const combined = `${withoutPhrases} ${skillsChunk}`.trim();
+
+  const tokens = combined
+    .split(" ")
+    .map((w) => w.trim())
+    .filter(Boolean)
+    .filter((w) => w.length >= 3)
+    .filter((w) => !/^\d/.test(w)) // remove 3rd, 7+, 4+
+    .filter((w) => HARD_SKILLS.has(w) || !junk.has(w));
+
+  // Optional: collapse some common variations
+  const normalizeTokens = tokens.map((t) => {
+    if (t === "nodejs") return "node";
+    if (t === "nextjs") return "next js";
+    if (t === "microservice" || t === "microservices") return "microservices";
+    return t;
+  });
+
+  // Prefer showing meaningful “signals” rather than everything:
+  // Keep hard skills + phrase matches + a few soft signals
+  const SOFT_SIGNALS = new Set([
+    "agile",
+    "communication",
+    "leadership",
+    "mentorship",
+    "collaboration",
+  ]);
+  const softSignals = normalizeTokens.filter((t) => SOFT_SIGNALS.has(t));
+
+  const hardSkills = normalizeTokens.filter((t) => HARD_SKILLS.has(t));
+
+  // Dedupe + cap
+  const out = new Set<string>([
+    ...Array.from(phraseMatches),
+    ...Array.from(acronymsFound),
+    ...hardSkills,
+  ]);
+
+  // Add a small number of soft signals if present
+  for (const s of softSignals) out.add(s);
+
+  return Array.from(out).slice(0, 24);
+}
+
+function splitMatchedMissing(keywords: string[], resume: string) {
+  const r = normalizeText(resume);
+  const matched: string[] = [];
+  const missing: string[] = [];
+
+  for (const k of keywords) {
+    const kk = normalizeText(k);
+    if (!kk) continue;
+    if (r.includes(kk)) matched.push(k);
+    else missing.push(k);
+  }
+
+  return { matched, missing };
+}
+
+/** --- UI helpers --- */
 function TruthBadge({ t }: { t: string }) {
   const label = t === "safe-rewrite" ? "✅ Safe rewrite" : "⚠️ Add-if-true";
   return (
@@ -108,6 +352,39 @@ export default function Report() {
   const input = getStoredInput();
   const jd = input?.jd ?? "";
   const resume = input?.resume ?? "";
+
+  const hasJD = jd.trim().length > 0;
+  const hasResume = resume.trim().length > 0;
+
+  if (!hasJD || !hasResume) {
+    return (
+      <div className="container">
+        <h1>Resume Match Report</h1>
+
+        <div className="card" style={{ marginTop: 16 }}>
+          <h3 style={{ marginTop: 0 }}>Missing input</h3>
+          <p className="small" style={{ marginTop: 8 }}>
+            {!hasJD &&
+              !hasResume &&
+              "Add a job description and your resume to generate a report."}
+            {!hasJD &&
+              hasResume &&
+              "Add a job description to generate a report."}
+            {hasJD && !hasResume && "Add your resume to generate a report."}
+          </p>
+
+          <a href="/analyze">
+            <button style={{ marginTop: 12 }}>Go to Analyze</button>
+          </a>
+
+          <p className="small" style={{ marginTop: 12 }}>
+            Tip: Your inputs are saved locally. If you cleared them, just paste
+            again.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const company = jd ? guessCompany(jd) : undefined;
   const roleGuess = jd ? guessRole(jd) : undefined;
@@ -188,12 +465,12 @@ export default function Report() {
                 marginTop: 10,
               }}
             >
-              {matched.slice(0, 12).map((k) => (
+              {matched.slice(0, 14).map((k) => (
                 <span key={`m-${k}`} className="badge">
                   ✅ {k}
                 </span>
               ))}
-              {missing.slice(0, 12).map((k) => (
+              {missing.slice(0, 14).map((k) => (
                 <span key={`x-${k}`} className="badge">
                   ⚠️ {k}
                 </span>
