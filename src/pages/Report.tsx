@@ -1,4 +1,7 @@
 import { mockReport } from "../mock/report";
+import { useState } from "react";
+import PaywallModal from "../components/PaywallModal";
+import MissingInputCard from "../components/MissingInputCard";
 
 const STORAGE_KEY = "rj_last_input_v1";
 
@@ -356,32 +359,16 @@ export default function Report() {
   const hasJD = jd.trim().length > 0;
   const hasResume = resume.trim().length > 0;
 
+  // Premium stub
+  const FREE_MISSING_MAX = 2;
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // If missing required inputs, do NOT show report sections.
   if (!hasJD || !hasResume) {
     return (
       <div className="container">
         <h1>Resume Match Report</h1>
-
-        <div className="card" style={{ marginTop: 16 }}>
-          <h3 style={{ marginTop: 0 }}>Missing input</h3>
-          <p className="small" style={{ marginTop: 8 }}>
-            {!hasJD &&
-              !hasResume &&
-              "Add a job description and your resume to generate a report."}
-            {!hasJD &&
-              hasResume &&
-              "Add a job description to generate a report."}
-            {hasJD && !hasResume && "Add your resume to generate a report."}
-          </p>
-
-          <a href="/analyze">
-            <button style={{ marginTop: 12 }}>Go to Analyze</button>
-          </a>
-
-          <p className="small" style={{ marginTop: 12 }}>
-            Tip: Your inputs are saved locally. If you cleared them, just paste
-            again.
-          </p>
-        </div>
+        <MissingInputCard hasJD={hasJD} hasResume={hasResume} />
       </div>
     );
   }
@@ -394,6 +381,12 @@ export default function Report() {
     keywords.length > 0
       ? splitMatchedMissing(keywords, resume)
       : { matched: [], missing: [] };
+
+  const matchedCount = matched.length;
+  const missingCount = missing.length;
+
+  const missingPreview = missing.slice(0, FREE_MISSING_MAX);
+  const hasMoreMissing = missingCount > FREE_MISSING_MAX;
 
   const breakdownEntries = [
     ["Frontend (React/TS)", r.scores.breakdown.frontendReactTypescript],
@@ -414,15 +407,6 @@ export default function Report() {
         Target role: <strong>{r.meta.roleTitle}</strong> · Fit:{" "}
         <strong>{r.meta.overallFit}</strong>
       </p>
-
-      {!input && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <p style={{ margin: 0 }}>
-            No job description/resume found. Go to{" "}
-            <a href="/analyze">Analyze</a> and paste your text first.
-          </p>
-        </div>
-      )}
 
       {/* INPUTS + KEYWORD MATCH */}
       <div className="card" style={{ marginTop: 16 }}>
@@ -448,13 +432,13 @@ export default function Report() {
 
         {keywords.length === 0 ? (
           <p className="small" style={{ marginTop: 10 }}>
-            Paste a job description on the Analyze page to see keyword matching.
+            Couldn’t extract keywords from this job description yet.
           </p>
         ) : (
           <>
             <p className="small" style={{ marginTop: 10 }}>
-              Keyword match (basic): <strong>{matched.length}</strong> matched ·{" "}
-              <strong>{missing.length}</strong> missing
+              Keyword match (basic): <strong>{matchedCount}</strong> matched ·{" "}
+              <strong>{missingCount}</strong> missing
             </p>
 
             <div
@@ -465,22 +449,32 @@ export default function Report() {
                 marginTop: 10,
               }}
             >
-              {matched.slice(0, 14).map((k) => (
+              {/* ✅ show ALL matched skills */}
+              {matched.map((k) => (
                 <span key={`m-${k}`} className="badge">
                   ✅ {k}
                 </span>
               ))}
-              {missing.slice(0, 14).map((k) => (
+
+              {/* ⚠️ missing skills preview only */}
+              {missingPreview.map((k) => (
                 <span key={`x-${k}`} className="badge">
                   ⚠️ {k}
                 </span>
               ))}
-            </div>
 
-            <p className="small" style={{ marginTop: 10 }}>
-              Note: this is a simple match check for now — AI scoring and deeper
-              gap detection come next.
-            </p>
+              {/* paywall teaser ONLY for missing */}
+              {hasMoreMissing && (
+                <button
+                  type="button"
+                  className="badge"
+                  onClick={() => setShowPaywall(true)}
+                  style={{ cursor: "pointer" }}
+                >
+                  More…
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -532,7 +526,6 @@ export default function Report() {
       {/* DO THIS FIRST */}
       <div className="card" style={{ marginTop: 16 }}>
         <h3 style={{ marginTop: 0 }}>Do This First (High Impact)</h3>
-
         <SectionEdits title="P0 Edits" edits={p0} />
         <div style={{ marginTop: 12 }} />
         <SectionEdits title="P1 Edits" edits={p1} />
@@ -639,6 +632,16 @@ export default function Report() {
           company/role (Glassdoor, Reddit, LinkedIn, etc.) — without scraping.
         </p>
       </div>
+
+      {/* PREMIUM MODAL (STUB) */}
+      {showPaywall && (
+        <PaywallModal
+          open={showPaywall}
+          freeMissingMax={FREE_MISSING_MAX}
+          onClose={() => setShowPaywall(false)}
+          onUnlock={() => alert("TODO: Hook up pricing / checkout")}
+        />
+      )}
     </div>
   );
 }
