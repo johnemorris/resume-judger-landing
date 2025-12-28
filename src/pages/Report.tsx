@@ -2,6 +2,16 @@ import { mockReport } from "../mock/report";
 import { useState } from "react";
 import PaywallModal from "../components/PaywallModal";
 import MissingInputCard from "../components/MissingInputCard";
+import InputsCard from "../components/InputsCard";
+import ScoreBreakdown from "../components/ScoreBreakdown";
+import OverallMatchCard from "../components/OverallMatchCard";
+import GapLearningPaths from "../components/GapLearningPaths";
+
+import {
+  PHRASES,
+  HARD_SKILLS_SET,
+  JUNK_TOKENS_SET,
+} from "../constants/keywords";
 
 const STORAGE_KEY = "rj_last_input_v1";
 
@@ -50,190 +60,6 @@ function guessRole(jd: string) {
   if (!firstLine) return undefined;
   return firstLine.length <= 80 ? firstLine : undefined;
 }
-
-/** --- keyword extraction (no AI) --- */
-
-// Phrases we keep together (v1, extend as we see real JDs)
-const PHRASES = [
-  "object oriented",
-  "object-oriented",
-  "full stack",
-  "front end",
-  "back end",
-  "ci/cd",
-  "cloud based",
-  "cloud-based",
-  "cloud native",
-  "cloud-native",
-  "real time",
-  "real-time",
-  "high performance",
-  "high-performance",
-  "micro services",
-  "micro-services",
-  "unit testing",
-  "integration testing",
-];
-
-// Never filter these out even if they appear in "junk"
-const HARD_SKILLS = new Set([
-  "react",
-  "typescript",
-  "javascript",
-  "node",
-  "node js",
-  "sql",
-  "rdbms",
-  "aws",
-  "azure",
-  "gcp",
-  "cloud",
-  "kubernetes",
-  "docker",
-  "eks",
-  "ecs",
-  "lambda",
-  "dynamodb",
-  "s3",
-  "graphql",
-  "rest",
-  "microservices",
-  "ci",
-  "cd",
-  "cicd",
-  "devops",
-  "terraform",
-  "cloudformation",
-  "jest",
-  "cypress",
-  "storybook",
-  "accessibility",
-  "a11y",
-  "next js",
-  "nextjs",
-  "redux",
-]);
-
-// Junk / boilerplate terms we want to ignore (v1 baseline)
-const junk = new Set([
-  // time / quantity
-  "years",
-  "year",
-  "yrs",
-  "yr",
-  "plus",
-  "over",
-  "under",
-  "minimum",
-  "maximum",
-
-  // generic experience fluff
-  "experience",
-  "experienced",
-  "strong",
-  "skills",
-  "skill",
-  "ability",
-  "abilities",
-  "knowledge",
-  "familiarity",
-  "proficient",
-  "expert",
-  "expertise",
-
-  // job-title noise
-  "software",
-  "developer",
-  "engineer",
-  "engineers",
-  "senior",
-  "junior",
-  "lead",
-  "staff",
-
-  // work environment filler
-  "work",
-  "working",
-  "environment",
-  "team",
-  "teams",
-  "collaboration",
-  "collaborative",
-  "fast",
-  "paced",
-  "dynamic",
-  "culture",
-
-  // development fluff
-  "development",
-  "developing",
-  "design",
-  "designed",
-  "implement",
-  "implemented",
-  "implementation",
-  "build",
-  "building",
-  "maintain",
-  "maintaining",
-
-  // JD boilerplate
-  "required",
-  "requirements",
-  "preferred",
-  "nice",
-  "have",
-  "must",
-  "should",
-  "responsibilities",
-  "role",
-  "position",
-
-  // employment / eligibility noise
-  "visa",
-  "visas",
-  "sponsorship",
-  "sponsor",
-  "citizen",
-  "citizens",
-  "citizenship",
-  "green",
-  "card",
-  "c2c",
-  "w2",
-  "contract",
-  "full",
-  "time",
-  "remote",
-  "hybrid",
-  "united",
-  "states",
-  "us",
-  "u s",
-
-  // legal / HR boilerplate
-  "equal",
-  "opportunity",
-  "employer",
-  "race",
-  "gender",
-  "sexual",
-  "orientation",
-  "religion",
-  "disability",
-  "age",
-
-  // fragments/noise seen in JDs
-  "3rd",
-  "third",
-  "party",
-  "parties",
-  "etc",
-  "and",
-  "or",
-  "with",
-  "without",
-]);
 
 function extractPhraseMatches(jd: string) {
   const text = normalizeText(jd);
@@ -288,7 +114,7 @@ function extractKeywords(jd: string) {
     .filter(Boolean)
     .filter((w) => w.length >= 3)
     .filter((w) => !/^\d/.test(w)) // remove 3rd, 7+, 4+
-    .filter((w) => HARD_SKILLS.has(w) || !junk.has(w));
+    .filter((w) => HARD_SKILLS_SET.has(w) || !JUNK_TOKENS_SET.has(w));
 
   // Optional: collapse some common variations
   const normalizeTokens = tokens.map((t) => {
@@ -309,7 +135,7 @@ function extractKeywords(jd: string) {
   ]);
   const softSignals = normalizeTokens.filter((t) => SOFT_SIGNALS.has(t));
 
-  const hardSkills = normalizeTokens.filter((t) => HARD_SKILLS.has(t));
+  const hardSkills = normalizeTokens.filter((t) => HARD_SKILLS_SET.has(t));
 
   // Dedupe + cap
   const out = new Set<string>([
@@ -382,7 +208,6 @@ export default function Report() {
       ? splitMatchedMissing(keywords, resume)
       : { matched: [], missing: [] };
 
-  const matchedCount = matched.length;
   const missingCount = missing.length;
 
   const missingPreview = missing.slice(0, FREE_MISSING_MAX);
@@ -409,119 +234,24 @@ export default function Report() {
       </p>
 
       {/* INPUTS + KEYWORD MATCH */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Your Inputs</h3>
-
-        <p className="small" style={{ marginTop: 6 }}>
-          {roleGuess ? (
-            <>
-              Role detected: <strong>{roleGuess}</strong>
-            </>
-          ) : (
-            <>
-              Role detected: <strong>(not detected)</strong>
-            </>
-          )}
-          {company ? (
-            <>
-              {" "}
-              · Company: <strong>{company}</strong>
-            </>
-          ) : null}
-        </p>
-
-        {keywords.length === 0 ? (
-          <p className="small" style={{ marginTop: 10 }}>
-            Couldn’t extract keywords from this job description yet.
-          </p>
-        ) : (
-          <>
-            <p className="small" style={{ marginTop: 10 }}>
-              Keyword match (basic): <strong>{matchedCount}</strong> matched ·{" "}
-              <strong>{missingCount}</strong> missing
-            </p>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-                marginTop: 10,
-              }}
-            >
-              {/* ✅ show ALL matched skills */}
-              {matched.map((k) => (
-                <span key={`m-${k}`} className="badge">
-                  ✅ {k}
-                </span>
-              ))}
-
-              {/* ⚠️ missing skills preview only */}
-              {missingPreview.map((k) => (
-                <span key={`x-${k}`} className="badge">
-                  ⚠️ {k}
-                </span>
-              ))}
-
-              {/* paywall teaser ONLY for missing */}
-              {hasMoreMissing && (
-                <button
-                  type="button"
-                  className="badge"
-                  onClick={() => setShowPaywall(true)}
-                  style={{ cursor: "pointer" }}
-                >
-                  More…
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+      <InputsCard
+        roleGuess={roleGuess}
+        company={company}
+        matched={matched}
+        missingPreview={missingPreview}
+        missingCount={missingCount}
+        hasMoreMissing={hasMoreMissing}
+        onMoreMissing={() => setShowPaywall(true)}
+      />
 
       {/* OVERVIEW */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2 style={{ marginTop: 0 }}>Overall Match</h2>
-        <div style={{ fontSize: 44, fontWeight: 800, marginTop: 6 }}>
-          {r.scores.overall} / 100
-        </div>
-        <p style={{ marginTop: 8 }}>
-          Your resume is a <strong>{r.meta.overallFit}</strong> match. Focus on
-          the edits below to raise confidence and reduce rejection risk.
-        </p>
-      </div>
+      <OverallMatchCard
+        overallScore={r.scores.overall}
+        overallFit={r.meta.overallFit}
+      />
 
       {/* BREAKDOWN */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Score Breakdown</h3>
-        {breakdownEntries.map(([label, score]) => (
-          <div key={label} style={{ marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>{label}</span>
-              <strong>{score}</strong>
-            </div>
-
-            <div
-              style={{
-                height: 10,
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.12)",
-                background: "rgba(255,255,255,0.06)",
-                overflow: "hidden",
-                marginTop: 6,
-              }}
-            >
-              <div
-                style={{
-                  height: "100%",
-                  width: pct(score),
-                  background: "rgba(255,255,255,0.22)",
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      <ScoreBreakdown entries={breakdownEntries} />
 
       {/* DO THIS FIRST */}
       <div className="card" style={{ marginTop: 16 }}>
@@ -532,72 +262,11 @@ export default function Report() {
       </div>
 
       {/* GAP LEARNING PATHS */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Close These Gaps Fast</h3>
-        <p className="small">
-          Short tutorials + mini-projects to get you job-ready quicker.
-        </p>
-
-        {r.gapLearningPaths.map((g) => (
-          <div key={g.gap} style={{ marginTop: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <strong>{g.gap}</strong>
-              <span className="badge">{g.priority.toUpperCase()}</span>
-            </div>
-
-            <p className="small" style={{ marginTop: 6 }}>
-              {g.whyItMatters}
-            </p>
-
-            <ul style={{ marginTop: 8 }}>
-              <li>
-                🆓 Tutorial:{" "}
-                <a
-                  href={g.fastTrack.tutorial.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {g.fastTrack.tutorial.title}
-                </a>{" "}
-                <span className="small">
-                  ({g.fastTrack.tutorial.time} · {g.fastTrack.tutorial.provider}
-                  )
-                </span>
-              </li>
-
-              <li>
-                🛠 Mini project:{" "}
-                <a
-                  href={g.fastTrack.project.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {g.fastTrack.project.title}
-                </a>{" "}
-                <span className="small">
-                  ({g.fastTrack.project.time} · {g.fastTrack.project.provider})
-                </span>
-              </li>
-
-              <li>
-                🎓 Optional deep dive:{" "}
-                <a
-                  href={g.fastTrack.optionalDeepDive.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {g.fastTrack.optionalDeepDive.title}
-                </a>{" "}
-                <span className="small">
-                  ({g.fastTrack.optionalDeepDive.time} ·{" "}
-                  {g.fastTrack.optionalDeepDive.provider})
-                  {g.fastTrack.optionalDeepDive.affiliate ? " · affiliate" : ""}
-                </span>
-              </li>
-            </ul>
-          </div>
-        ))}
-      </div>
+      <GapLearningPaths
+        gaps={r.gapLearningPaths}
+        isPremium={false} // stub for now
+        onUpsell={() => setShowPaywall(true)}
+      />
 
       {/* REQUIREMENTS */}
       <div className="card" style={{ marginTop: 16 }}>
