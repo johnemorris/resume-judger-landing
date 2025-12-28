@@ -2,18 +2,41 @@
  * Common multi-word phrases that should be treated as a single skill.
  * These are checked BEFORE single-word matching.
  */
-export const PHRASES = [
-  "object oriented",
-  "cloud based",
-  "ci cd",
-  "infrastructure as code",
-  "micro frontends",
-  "microservices",
-  "design systems",
-  "unit testing",
-  "integration testing",
-  "end to end",
-] as const;
+
+export const PHRASE_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  "object oriented": [
+    "object oriented",
+    "object-oriented",
+    "oop",
+    "object oriented programming",
+  ],
+  "cloud based": ["cloud based", "cloud-based", "cloud native", "cloud-native"],
+  "ci/cd": [
+    "ci cd",
+    "ci/cd",
+    "cicd",
+    "continuous integration",
+    "continuous delivery",
+    "continuous deployment",
+  ],
+  "infrastructure as code": [
+    "infrastructure as code",
+    "iac",
+    "terraform",
+    "cloudformation",
+  ],
+  "end to end": ["end to end", "end-to-end", "e2e"],
+  "micro frontends": [
+    "micro frontends",
+    "micro-frontends",
+    "microfrontend",
+    "micro-frontend",
+  ],
+  "real time": ["real time", "real-time", "realtime"],
+  "unit testing": ["unit testing", "unit tests", "tdd"],
+  "integration testing": ["integration testing", "integration tests"],
+  agile: ["agile", "scrum", "kanban"],
+} as const;
 
 /**
  * Hard technical skills we care about matching.
