@@ -1,5 +1,6 @@
 import { mockReport } from "../mock/report";
 import { useState } from "react";
+
 import PaywallModal from "../components/PaywallModal";
 import MissingInputCard from "../components/MissingInputCard";
 import InputsCard from "../components/InputsCard";
@@ -7,24 +8,15 @@ import ScoreBreakdown from "../components/ScoreBreakdown";
 import OverallMatchCard from "../components/OverallMatchCard";
 import GapLearningPaths from "../components/GapLearningPaths";
 import SurgicalEditsCard from "../components/SurgicalEditsCard";
+import RequirementsCoverageCard from "../components/RequirementsCoverageCard";
+import InterviewLinksStub from "../components/InterviewLinksStub";
 
 import { getStoredInput } from "../utils/storage";
 import { guessCompany, guessRole } from "../utils/guess";
 import { extractKeywords } from "../utils/keywordExtraction";
 import { splitMatchedMissing } from "../utils/keywordMatch";
-import InterviewLinksStub from "../components/InterviewLinkStub";
 
 const STORAGE_KEY = "rj_last_input_v1";
-
-/** --- UI helpers --- */
-// function TruthBadge({ t }: { t: string }) {
-//   const label = t === "safe-rewrite" ? "✅ Safe rewrite" : "⚠️ Add-if-true";
-//   return (
-//     <span className="badge" style={{ marginLeft: 8 }}>
-//       {label}
-//     </span>
-//   );
-// }
 
 export default function Report() {
   const r = mockReport;
@@ -115,29 +107,7 @@ export default function Report() {
       />
 
       {/* REQUIREMENTS */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Requirements Coverage</h3>
-
-        {r.requirementsCoverage.required.map((req) => (
-          <div key={req.requirement} style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <strong>{req.requirement}</strong>
-              <span className="badge">{req.status.toUpperCase()}</span>
-            </div>
-
-            <p className="small" style={{ marginTop: 6 }}>
-              <strong>Evidence:</strong>{" "}
-              {req.evidenceQuote || "No evidence found in resume."}
-            </p>
-
-            {req.status !== "met" && (
-              <p className="small">
-                <strong>To improve:</strong> {req.whatWouldMakeItMet}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+      <RequirementsCoverageCard required={r.requirementsCoverage.required} />
 
       {/* COMING SOON: INTERVIEW LINKS */}
       <InterviewLinksStub />
