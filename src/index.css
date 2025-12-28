@@ -1,67 +1,209 @@
 :root {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  /* Optional accent you can reuse in small places */
+  --accent: #8ab4f8;
 }
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: #0b0d12;
   color: #e9eef7;
 }
+
 a {
   color: inherit;
 }
+
+/* ---------- Layout ---------- */
 .container {
   max-width: 920px;
   margin: 0 auto;
   padding: 48px 20px;
 }
+
+/* Adds breathing room between large sections when you want it */
+.section {
+  margin-top: 26px;
+}
+
+/* ---------- Card ---------- */
 .card {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 22px;
+
+  /* Helps prevent flex children (like textareas) from overflowing */
+  min-width: 0;
 }
+
+/* ---------- Hero (Homepage) ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  /* Slight separation from rest of the page */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.04)
+  );
+}
+
+/* Subtle modern “glow” so it’s not plain */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -55%;
+  background: radial-gradient(
+    circle at 18% 10%,
+    rgba(138, 180, 248, 0.22),
+    transparent 58%
+  );
+  pointer-events: none;
+}
+
+.heroBadge,
+.heroTitle,
+.heroSubtitle,
+.heroCtas,
+.heroNote {
+  position: relative;
+  z-index: 1;
+}
+
+.heroBadge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(233, 238, 247, 0.75);
+  margin-bottom: 10px;
+}
+
+.heroTitle {
+  margin: 0 0 12px;
+}
+
+.heroSubtitle {
+  margin: 0 0 14px;
+  color: rgba(233, 238, 247, 0.82);
+  font-size: 16px;
+  max-width: 760px;
+}
+
+.heroCtas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.heroNote {
+  margin-top: 14px;
+  font-size: 13px;
+  color: rgba(233, 238, 247, 0.7);
+}
+
+/* Softer “steps” so it doesn’t feel like stacked heavy cards */
+.stepCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.kicker {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+/* ---------- Typography ---------- */
 h1 {
   font-size: 44px;
   line-height: 1.05;
   margin: 0 0 14px;
   letter-spacing: -0.02em;
 }
+
 p {
   margin: 0 0 14px;
   color: rgba(233, 238, 247, 0.85);
   font-size: 18px;
 }
+
+/* smaller helper text */
 .small {
   font-size: 13px;
   color: rgba(233, 238, 247, 0.65);
 }
+
+.muted {
+  color: rgba(233, 238, 247, 0.6);
+}
+
+/* ---------- Grids ---------- */
 .grid {
   display: grid;
   gap: 16px;
   grid-template-columns: 1.3fr 1fr;
 }
+
+.grid3 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
 @media (max-width: 860px) {
   .grid {
     grid-template-columns: 1fr;
   }
+
+  .grid3 {
+    grid-template-columns: 1fr;
+  }
+
   h1 {
     font-size: 36px;
   }
 }
+
+/* ---------- Lists ---------- */
 ul {
   margin: 14px 0 0;
   padding: 0 0 0 18px;
 }
+
 li {
   margin: 8px 0;
   color: rgba(233, 238, 247, 0.9);
 }
+
+/* ---------- Badges ---------- */
 .badgeRow {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin: 12px 0 18px;
 }
+
 .badge {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -70,11 +212,14 @@ li {
   font-size: 13px;
   color: rgba(233, 238, 247, 0.9);
 }
+
+/* ---------- Forms ---------- */
 .formRow {
   display: flex;
   gap: 10px;
   margin-top: 12px;
 }
+
 input[type="email"] {
   flex: 1;
   padding: 12px 14px;
@@ -83,7 +228,15 @@ input[type="email"] {
   background: rgba(0, 0, 0, 0.25);
   color: #e9eef7;
   outline: none;
+  min-width: 0; /* prevents overflow in flex rows */
 }
+
+input[type="email"]:focus {
+  border-color: rgba(138, 180, 248, 0.5);
+  box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.12);
+}
+
+/* ---------- Buttons ---------- */
 button {
   padding: 12px 14px;
   border-radius: 10px;
@@ -91,11 +244,41 @@ button {
   background: rgba(255, 255, 255, 0.12);
   color: #e9eef7;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  transition: transform 0.05s ease, background 0.15s ease,
+    border-color 0.15s ease;
 }
+
 button:hover {
   background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.22);
 }
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Optional button variants */
+button.primary {
+  background: rgba(138, 180, 248, 0.18);
+  border-color: rgba(138, 180, 248, 0.32);
+}
+
+button.primary:hover {
+  background: rgba(138, 180, 248, 0.24);
+  border-color: rgba(138, 180, 248, 0.38);
+}
+
+button.secondary {
+  background: transparent;
+}
+
+/* ---------- Mock box ---------- */
 .mock {
   height: 240px;
   border-radius: 14px;
@@ -105,19 +288,24 @@ button:hover {
   color: rgba(233, 238, 247, 0.7);
   background: rgba(0, 0, 0, 0.18);
 }
+
+/* ---------- Footer / Divider ---------- */
 footer {
   margin-top: 34px;
   color: rgba(233, 238, 247, 0.55);
   font-size: 12px;
 }
+
 hr {
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   margin: 18px 0;
 }
 
+/* ---------- Textareas (overflow fix + nicer focus) ---------- */
 textarea {
   width: 100%;
+  max-width: 100%;
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -125,4 +313,56 @@ textarea {
   color: #e9eef7;
   outline: none;
   resize: vertical;
+
+  min-width: 0; /* key overflow fix in flex/grid contexts */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+textarea:focus {
+  border-color: rgba(138, 180, 248, 0.5);
+  box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.12);
+}
+
+/* ---------- Nav ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  background: rgba(11, 13, 18, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.navInner {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* 👈 this is the main fix */
+}
+
+.navLinks a {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.navLinks a:hover {
+  opacity: 1;
 }

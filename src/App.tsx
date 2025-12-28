@@ -1,36 +1,18 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
 import Analyze from "./pages/Analyze";
 import Report from "./pages/Report";
-import { useState } from "react";
 
-/**
- * Root App
- */
 export default function App() {
   return (
-    <>
-      <Nav />
-
+    <Layout>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Home />} />
         <Route path="/analyze" element={<Analyze />} />
         <Route path="/report" element={<Report />} />
       </Routes>
-    </>
-  );
-}
-
-/**
- * Simple top nav (temporary)
- */
-function Nav() {
-  return (
-    <nav style={{ padding: 16 }}>
-      <Link to="/" style={{ marginRight: 12 }}>
-        Home
-      </Link>
-      <Link to="/analyze">Analyze</Link>
-    </nav>
+    </Layout>
   );
 }
 
