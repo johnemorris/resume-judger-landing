@@ -18,7 +18,8 @@ export default function Nav() {
     <header className="nav">
       <div className="navInner">
         <Link to="/" className="brand">
-          Resume Judger
+          <span className="brandMark" aria-hidden="true" />
+          <span>Resume Judger</span>
         </Link>
 
         <nav className="navLinks">

@@ -333,24 +333,25 @@ textarea:focus {
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(10px);
-  background: rgba(11, 13, 18, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* This is the key: a slightly lighter “glass” tint than the page */
+  background: rgba(15, 18, 26, 0.78);
+  backdrop-filter: blur(12px);
+
+  /* Separation: 2-edge treatment */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+  border-top: 1px solid rgba(138, 180, 248, 0.35);
 }
 
 .navInner {
   max-width: 920px;
   margin: 0 auto;
-  padding: 14px 20px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.brand {
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  text-decoration: none;
 }
 
 .navLinks {
@@ -362,13 +363,29 @@ textarea:focus {
 .navLinks a {
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   opacity: 0.75;
-  transition: opacity 0.15s ease;
 }
 
 .navLinks a:hover {
   opacity: 1;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brandMark {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(138, 180, 248, 0.9);
+  box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.12);
 }
 
 .earlyAccess {
