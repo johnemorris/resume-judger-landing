@@ -17,6 +17,7 @@ import { extractKeywords } from "../utils/keywordExtraction";
 import { splitMatchedMissing } from "../utils/keywordMatch";
 
 const STORAGE_KEY = "rj_last_input_v1";
+const FREE_MISSING_MAX = 2;
 
 export default function Report() {
   const r = mockReport;
@@ -29,7 +30,6 @@ export default function Report() {
   const hasResume = resume.trim().length > 0;
 
   // Premium stub
-  const FREE_MISSING_MAX = 2;
   const [showPaywall, setShowPaywall] = useState(false);
 
   // If missing required inputs, do NOT show report sections.
@@ -42,14 +42,11 @@ export default function Report() {
     );
   }
 
-  const company = jd ? guessCompany(jd) : undefined;
-  const roleGuess = jd ? guessRole(jd) : undefined;
+  const company = guessCompany(jd);
+  const roleGuess = guessRole(jd);
 
-  const keywords = jd ? extractKeywords(jd) : [];
-  const { matched, missing } =
-    keywords.length > 0
-      ? splitMatchedMissing(keywords, resume)
-      : { matched: [], missing: [] };
+  const keywords = extractKeywords(jd);
+  const { matched, missing } = splitMatchedMissing(keywords, resume);
 
   const missingCount = missing.length;
 
