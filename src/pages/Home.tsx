@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <div className="container">
       <div className="hero">
-        <div className="heroBadge">Early access</div>
+        <div className="heroBadge">Early access · Feedback welcome</div>
 
         <h1 className="heroTitle">
           Stop guessing why your resume isn’t landing interviews
