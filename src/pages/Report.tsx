@@ -6,164 +6,201 @@ import InputsCard from "../components/InputsCard";
 import ScoreBreakdown from "../components/ScoreBreakdown";
 import OverallMatchCard from "../components/OverallMatchCard";
 import GapLearningPaths from "../components/GapLearningPaths";
+import { getStoredInput } from "../utils/storage";
+import { guessCompany, guessRole } from "../utils/guess";
+import { extractKeywords } from "../utils/keywordExtraction";
+import { splitMatchedMissing } from "../utils/keywordMatch";
 
 import {
-  PHRASES,
   HARD_SKILLS_SET,
   JUNK_TOKENS_SET,
+  PHRASE_ALIASES,
 } from "../constants/keywords";
 
 const STORAGE_KEY = "rj_last_input_v1";
 
 /** --- text utils --- */
-function normalizeText(s: string) {
-  return s
-    .toLowerCase()
-    .replace(/[-_/]/g, " ")
-    .replace(/[^\w\s+]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+// function normalizeText(s: string) {
+//   return s
+//     .toLowerCase()
+//     .replace(/[-_/]/g, " ")
+//     .replace(/[^\w\s+]/g, " ")
+//     .replace(/\s+/g, " ")
+//     .trim();
+// }
 
-function pct(n: number) {
-  return `${Math.max(0, Math.min(100, n))}%`;
-}
-
-function getStoredInput(): {
-  jd: string;
-  resume: string;
-  savedAtISO?: string;
-} | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (typeof parsed?.jd !== "string" || typeof parsed?.resume !== "string")
-      return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
+// function getStoredInput(): {
+//   jd: string;
+//   resume: string;
+//   savedAtISO?: string;
+// } | null {
+//   try {
+//     const raw = localStorage.getItem(STORAGE_KEY);
+//     if (!raw) return null;
+//     const parsed = JSON.parse(raw);
+//     if (typeof parsed?.jd !== "string" || typeof parsed?.resume !== "string")
+//       return null;
+//     return parsed;
+//   } catch {
+//     return null;
+//   }
+// }
 
 /** --- heuristics: role/company guess --- */
-function guessCompany(jd: string) {
-  const head = jd.slice(0, 450);
-  const m = head.match(/\bat\s+([A-Z][A-Za-z0-9&.\- ]{2,50})/);
-  return m?.[1]?.trim();
-}
+// function guessCompany(jd: string) {
+//   const head = jd.slice(0, 450);
+//   const m = head.match(/\bat\s+([A-Z][A-Za-z0-9&.\- ]{2,50})/);
+//   return m?.[1]?.trim();
+// }
 
-function guessRole(jd: string) {
-  const head = jd.slice(0, 250);
-  const m = head.match(/^(.*?)(?:\n|·|$)/);
-  const firstLine = m?.[1]?.trim();
-  if (!firstLine) return undefined;
-  return firstLine.length <= 80 ? firstLine : undefined;
-}
+// function guessRole(jd: string) {
+//   const head = jd.slice(0, 250);
+//   const m = head.match(/^(.*?)(?:\n|·|$)/);
+//   const firstLine = m?.[1]?.trim();
+//   if (!firstLine) return undefined;
+//   return firstLine.length <= 80 ? firstLine : undefined;
+// }
 
-function extractPhraseMatches(jd: string) {
-  const text = normalizeText(jd);
-  const found = new Set<string>();
+// function escapeRegex(s: string) {
+//   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// }
 
-  for (const phrase of PHRASES) {
-    const p = normalizeText(phrase);
-    if (p && text.includes(p)) found.add(p);
-  }
-  return found;
-}
+// function buildVariantRegex(variant: string) {
+//   // allow flexible whitespace and hyphen/slash between words
+//   // example: "object oriented" matches "object-oriented" and "object   oriented"
+//   const parts = variant.trim().toLowerCase().split(/\s+/).map(escapeRegex);
 
-function removePhrasesFromText(text: string, phrases: Set<string>) {
-  let t = text;
-  phrases.forEach((p) => {
-    // remove all occurrences to avoid splitting into parts
-    t = t.split(p).join(" ");
-  });
-  return normalizeText(t);
-}
+//   if (parts.length === 1) {
+//     // also handle common punctuation around single tokens
+//     return `\\b${parts[0]}\\b`;
+//   }
 
-function extractFromSkillsSection(jd: string) {
-  const skillsMatch = jd.match(/skills\s*:\s*([\s\S]{0,1000})/i);
-  return skillsMatch ? skillsMatch[1] : "";
-}
+//   // allow spaces, hyphens, or slashes between words
+//   return `\\b${parts.join("(?:\\s+|\\-|\\/)+")}\\b`;
+// }
 
-function extractKeywords(jd: string) {
-  const phraseMatches = extractPhraseMatches(jd);
+// function extractPhraseMatches(jd: string) {
+//   const text = normalizeText(jd); // your existing normalizer (lowercase, punctuation normalization, etc.)
+//   const found = new Set<string>();
 
-  // normalize JD and remove phrases before tokenization
-  const normalized = normalizeText(jd);
-  const withoutPhrases = removePhrasesFromText(normalized, phraseMatches);
+//   for (const [canonical, variants] of Object.entries(PHRASE_ALIASES)) {
+//     for (const v of variants) {
+//       const re = new RegExp(buildVariantRegex(v), "i");
+//       if (re.test(text)) {
+//         found.add(canonical);
+//         break; // once one variant matches, we count the canonical phrase once
+//       }
+//     }
+//   }
 
-  // Pull from skills section too (helps focus)
-  const skillsChunk = normalizeText(extractFromSkillsSection(jd));
+//   return found;
+// }
 
-  // Acronyms in skills chunk: SQL, RDBMS, etc.
-  // We already normalized to lowercase, so we won't capture uppercase here.
-  // Instead, we extract common acronyms via a small allow-list:
-  const commonAcronyms = ["sql", "rdbms", "oop"];
-  const acronymsFound = new Set<string>();
-  for (const a of commonAcronyms) {
-    if (skillsChunk.includes(a)) acronymsFound.add(a);
-  }
+// function removePhrasesFromText(text: string, matchedCanonicals: Set<string>) {
+//   let out = text;
 
-  // Tokenize combined text: "withoutPhrases" + "skillsChunk" to increase recall
-  const combined = `${withoutPhrases} ${skillsChunk}`.trim();
+//   for (const canonical of matchedCanonicals) {
+//     const variants = PHRASE_ALIASES[canonical] ?? [];
+//     for (const v of variants) {
+//       const re = new RegExp(buildVariantRegex(v), "gi");
+//       out = out.replace(re, " "); // replace with space to keep token boundaries
+//     }
+//   }
 
-  const tokens = combined
-    .split(" ")
-    .map((w) => w.trim())
-    .filter(Boolean)
-    .filter((w) => w.length >= 3)
-    .filter((w) => !/^\d/.test(w)) // remove 3rd, 7+, 4+
-    .filter((w) => HARD_SKILLS_SET.has(w) || !JUNK_TOKENS_SET.has(w));
+//   // collapse whitespace
+//   return out.replace(/\s+/g, " ").trim();
+// }
 
-  // Optional: collapse some common variations
-  const normalizeTokens = tokens.map((t) => {
-    if (t === "nodejs") return "node";
-    if (t === "nextjs") return "next js";
-    if (t === "microservice" || t === "microservices") return "microservices";
-    return t;
-  });
+// function extractFromSkillsSection(jd: string) {
+//   const skillsMatch = jd.match(/skills\s*:\s*([\s\S]{0,1000})/i);
+//   return skillsMatch ? skillsMatch[1] : "";
+// }
 
-  // Prefer showing meaningful “signals” rather than everything:
-  // Keep hard skills + phrase matches + a few soft signals
-  const SOFT_SIGNALS = new Set([
-    "agile",
-    "communication",
-    "leadership",
-    "mentorship",
-    "collaboration",
-  ]);
-  const softSignals = normalizeTokens.filter((t) => SOFT_SIGNALS.has(t));
+// function extractKeywords(jd: string) {
+//   const phraseMatches = extractPhraseMatches(jd);
 
-  const hardSkills = normalizeTokens.filter((t) => HARD_SKILLS_SET.has(t));
+//   // normalize JD and remove phrases before tokenization
+//   const normalized = normalizeText(jd);
+//   const withoutPhrases = removePhrasesFromText(normalized, phraseMatches);
 
-  // Dedupe + cap
-  const out = new Set<string>([
-    ...Array.from(phraseMatches),
-    ...Array.from(acronymsFound),
-    ...hardSkills,
-  ]);
+//   // Pull from skills section too (helps focus)
+//   const skillsChunk = normalizeText(extractFromSkillsSection(jd));
 
-  // Add a small number of soft signals if present
-  for (const s of softSignals) out.add(s);
+//   // Small allow-list for common acronyms (already normalized to lowercase)
+//   const commonAcronyms = ["sql", "rdbms", "oop"];
+//   const acronymsFound = new Set<string>();
+//   for (const a of commonAcronyms) {
+//     if (skillsChunk.includes(a)) acronymsFound.add(a);
+//   }
 
-  return Array.from(out).slice(0, 24);
-}
+//   // Soft signals we may include (small number, optional)
+//   const SOFT_SIGNALS_SET = new Set<string>([
+//     "agile",
+//     "communication",
+//     "leadership",
+//     "mentorship",
+//     "collaboration",
+//   ]);
 
-function splitMatchedMissing(keywords: string[], resume: string) {
-  const r = normalizeText(resume);
-  const matched: string[] = [];
-  const missing: string[] = [];
+//   // Tokenize combined text: increases recall
+//   const combined = `${withoutPhrases} ${skillsChunk}`.trim();
 
-  for (const k of keywords) {
-    const kk = normalizeText(k);
-    if (!kk) continue;
-    if (r.includes(kk)) matched.push(k);
-    else missing.push(k);
-  }
+//   const rawTokens = combined
+//     .split(" ")
+//     .map((w) => w.trim())
+//     .filter(Boolean)
+//     .filter((w) => w.length >= 2) // allow "ci" "cd" etc (phrases already handled, but keep 2+ safe)
+//     .filter((w) => !/^\d/.test(w)); // remove 3rd, 7+, 4+
 
-  return { matched, missing };
-}
+//   // Normalize common variations BEFORE filtering
+//   const normalizedTokens = rawTokens.map((t) => {
+//     if (t === "nodejs") return "node";
+//     if (t === "nextjs") return "next.js";
+//     if (t === "microservice" || t === "microservices") return "microservices";
+//     if (t === "iac") return "infrastructure as code";
+//     return t;
+//   });
+
+//   // Filter: keep ONLY meaningful tokens
+//   const keptTokens = normalizedTokens.filter((w) => {
+//     if (JUNK_TOKENS_SET.has(w)) return false;
+//     if (HARD_SKILLS_SET.has(w)) return true;
+//     if (SOFT_SIGNALS_SET.has(w)) return true;
+//     if (commonAcronyms.includes(w)) return true;
+//     return false;
+//   });
+
+//   // Build final output:
+//   // phrases + acronyms + hard skills + (some) soft signals
+//   const hardSkills = keptTokens.filter((t) => HARD_SKILLS_SET.has(t));
+//   const softSignals = keptTokens.filter((t) => SOFT_SIGNALS_SET.has(t));
+
+//   const out = new Set<string>([
+//     ...Array.from(phraseMatches),
+//     ...Array.from(acronymsFound),
+//     ...hardSkills,
+//   ]);
+
+//   // Add a small number of soft signals (cap so they don't dominate)
+//   for (const s of softSignals.slice(0, 4)) out.add(s);
+
+//   return Array.from(out).slice(0, 24);
+// }
+
+// function splitMatchedMissing(keywords: string[], resume: string) {
+//   const r = normalizeText(resume);
+//   const matched: string[] = [];
+//   const missing: string[] = [];
+
+//   for (const k of keywords) {
+//     const kk = normalizeText(k);
+//     if (!kk) continue;
+//     if (r.includes(kk)) matched.push(k);
+//     else missing.push(k);
+//   }
+
+//   return { matched, missing };
+// }
 
 /** --- UI helpers --- */
 function TruthBadge({ t }: { t: string }) {
@@ -178,7 +215,7 @@ function TruthBadge({ t }: { t: string }) {
 export default function Report() {
   const r = mockReport;
 
-  const input = getStoredInput();
+  const input = getStoredInput(STORAGE_KEY);
   const jd = input?.jd ?? "";
   const resume = input?.resume ?? "";
 
