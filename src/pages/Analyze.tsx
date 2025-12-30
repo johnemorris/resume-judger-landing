@@ -123,6 +123,11 @@ export default function Analyze() {
           onChange={(e) => setJd(e.target.value)}
           rows={10}
           placeholder="Paste the job description here..."
+          onFocus={(e) => {
+            if (e.target.value.length > 0) {
+              e.target.select();
+            }
+          }}
         />
 
         <div
@@ -145,6 +150,11 @@ export default function Analyze() {
           onChange={(e) => setResume(e.target.value)}
           rows={14}
           placeholder="Paste your resume text here..."
+          onFocus={(e) => {
+            if (e.target.value.length > 0) {
+              e.target.select();
+            }
+          }}
         />
       </div>
     </div>

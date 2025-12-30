@@ -110,6 +110,35 @@ export const mockReport = {
         },
       },
     },
+    {
+      gap: "TaaS",
+      priority: "high",
+      whyItMatters:
+        "This role expects repeatable AWS infrastructure and deployment workflows.",
+      fastTrack: {
+        tutorial: {
+          title: "Terraform vs CloudFormation (quick overview)",
+          provider: "YouTube",
+          time: "15–20 min",
+          url: "https://www.youtube.com/results?search_query=terraform+vs+cloudformation",
+          affiliate: false,
+        },
+        project: {
+          title: "Deploy a Node API on AWS using Terraform",
+          provider: "Guided tutorial",
+          time: "2–3 hrs",
+          url: "https://www.google.com/search?q=deploy+node+api+aws+terraform+tutorial",
+          affiliate: false,
+        },
+        optionalDeepDive: {
+          title: "Terraform on AWS for Developers",
+          provider: "Udemy",
+          time: "3–6 hrs",
+          url: "https://www.udemy.com/courses/search/?q=terraform%20aws",
+          affiliate: true,
+        },
+      },
+    },
   ],
   requirementsCoverage: {
     required: [

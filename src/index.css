@@ -401,3 +401,19 @@ textarea:focus {
   background: rgba(138, 180, 248, 0.12);
   border: 1px solid rgba(138, 180, 248, 0.25);
 }
+
+/* ---- Gated (debug / pre-blur) ---- */
+.gatedDebug {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.6);
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.gatedRow {
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.gatedRow * {
+  color: rgba(255, 107, 107, 0.95) !important;
+}
