@@ -11,28 +11,40 @@ export default function RequirementsCoverageCard({
   required: ReadonlyArray<Requirement>;
 }) {
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3 style={{ marginTop: 0 }}>Requirements Coverage</h3>
+    <div className="card">
+      {required.map((req) => {
+        const status = String(req.status).toUpperCase();
+        const isMet = req.status === "met";
 
-      {required.map((req) => (
-        <div key={req.requirement} style={{ marginTop: 12 }}>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <strong>{req.requirement}</strong>
-            <span className="badge">{String(req.status).toUpperCase()}</span>
-          </div>
+        return (
+          <div key={req.requirement} style={{ marginTop: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <strong>{req.requirement}</strong>
+              <span className="badge">{status}</span>
+            </div>
 
-          <p className="small" style={{ marginTop: 6 }}>
-            <strong>Evidence:</strong>{" "}
-            {req.evidenceQuote || "No evidence found in resume."}
-          </p>
-
-          {req.status !== "met" && req.whatWouldMakeItMet && (
-            <p className="small">
-              <strong>To improve:</strong> {req.whatWouldMakeItMet}
+            <p className="small" style={{ marginTop: 6, marginBottom: 0 }}>
+              <strong>Evidence:</strong>{" "}
+              {req.evidenceQuote || "No evidence found in resume."}
             </p>
-          )}
-        </div>
-      ))}
+
+            {!isMet && req.whatWouldMakeItMet && (
+              <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>
+                <strong>To improve:</strong> {req.whatWouldMakeItMet}
+              </p>
+            )}
+
+            <hr style={{ margin: "14px 0 0" }} />
+          </div>
+        );
+      })}
     </div>
   );
 }

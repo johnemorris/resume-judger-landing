@@ -32,25 +32,28 @@ export default function InputsCard({
   const overflowCount = Math.max(0, missingCount - FREE_MISSING_MAX);
 
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3 style={{ marginTop: 0 }}>
-        What we detected from the Job Description
-      </h3>
+    <div className="card">
+      {/* Subtle context line (Report section header already carries the title) */}
+      <p className="small" style={{ margin: 0 }}>
+        Signals detected from the job description and your resume.
+      </p>
 
       {(roleGuess || company) && (
-        <p className="small" style={{ marginTop: 6 }}>
-          {roleGuess && (
-            <>
-              <strong>Role guess:</strong> {roleGuess}
-              {company ? " · " : ""}
-            </>
-          )}
-          {company && (
-            <>
-              <strong>Company guess:</strong> {company}
-            </>
-          )}
-        </p>
+        <div style={{ marginTop: 10 }}>
+          <p className="small" style={{ margin: 0 }}>
+            {roleGuess && (
+              <>
+                <strong>Role guess:</strong> {roleGuess}
+                {company ? " · " : ""}
+              </>
+            )}
+            {company && (
+              <>
+                <strong>Company guess:</strong> {company}
+              </>
+            )}
+          </p>
+        </div>
       )}
 
       <hr />
@@ -58,6 +61,7 @@ export default function InputsCard({
       {/* MATCHED SKILLS */}
       <div>
         <div
+          className="inputsHeaderRow"
           style={{
             display: "flex",
             gap: 10,
@@ -92,6 +96,7 @@ export default function InputsCard({
       {/* MISSING SKILLS */}
       <div>
         <div
+          className="inputsHeaderRow"
           style={{
             display: "flex",
             gap: 10,
@@ -133,16 +138,9 @@ export default function InputsCard({
               )}
             </div>
 
-            {/* Optional: show a couple of red “gated” examples so you can SEE the gated set.
-                This is helpful for deciding what to put behind the paywall. */}
+            {/* Optional: show a couple of red “gated” examples so you can SEE the gated set. */}
             {hasMoreMissing && (
               <div className="badgeRow" style={{ marginTop: 8 }}>
-                {/*
-                  We do NOT have the overflow array in props (by design),
-                  so we render “Locked skill” placeholders here.
-                  If you prefer to render the real overflow skills in red,
-                  pass `missingAll` or `missingOverflow` into this component.
-                */}
                 <span
                   className="badge gatedDebug"
                   onClick={onMoreMissing}

@@ -25,7 +25,7 @@ export default function Nav() {
       <div className="navInner">
         <Link to="/" className="brand" aria-label="Go to home">
           <span className="brandDot" aria-hidden="true" />
-          <span className="brandText">Resume Judger</span>
+          <span className="brandText">ResumeClarity</span>
         </Link>
 
         {!isComingSoon && (

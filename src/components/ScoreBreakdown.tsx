@@ -8,12 +8,17 @@ type ScoreBreakdownProps = {
 
 export default function ScoreBreakdown({ entries }: ScoreBreakdownProps) {
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3 style={{ marginTop: 0 }}>Score Breakdown</h3>
-
+    <div className="card">
       {entries.map(([label, score]) => (
-        <div key={label} style={{ marginBottom: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div key={label} style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              gap: 10,
+            }}
+          >
             <span>{label}</span>
             <strong>{score}</strong>
           </div>

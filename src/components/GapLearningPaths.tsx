@@ -16,7 +16,7 @@ type GapLearningPathsProps = {
   isPremium: boolean; // later
   onUpsell: () => void;
 
-  // new: how many gaps are free in MVP
+  // how many gaps are free in MVP
   freeMax?: number;
 };
 
@@ -28,9 +28,10 @@ export default function GapLearningPaths({
 }: GapLearningPathsProps) {
   if (!gaps || gaps.length === 0) {
     return (
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Gap Learning Paths</h3>
-        <p className="small">No gaps detected yet.</p>
+      <div className="card">
+        <p className="small" style={{ margin: 0 }}>
+          No gaps detected yet.
+        </p>
       </div>
     );
   }
@@ -41,7 +42,8 @@ export default function GapLearningPaths({
   const gatedCount = Math.max(0, gaps.length - freeMax);
 
   return (
-    <div className="card" style={{ marginTop: 16 }}>
+    <div className="card">
+      {/* Top row: count + lock affordance */}
       <div
         style={{
           display: "flex",
@@ -50,8 +52,7 @@ export default function GapLearningPaths({
           flexWrap: "wrap",
         }}
       >
-        <h3 style={{ marginTop: 0, marginBottom: 0 }}>Gap Learning Paths</h3>
-        <span className="small">
+        <span className="small" style={{ margin: 0 }}>
           {gaps.length} gap{gaps.length === 1 ? "" : "s"}
         </span>
 
@@ -62,14 +63,14 @@ export default function GapLearningPaths({
             style={{ cursor: "pointer", marginLeft: "auto" }}
             title="Locked — upgrade to see all gaps"
           >
-            +{gatedCount} more (locked)
+            +{gatedCount} locked
           </span>
         )}
       </div>
 
-      <p className="small" style={{ marginTop: 8 }}>
-        Focus on the highest-impact gaps first. We’ll provide tutorials and a
-        fast-track mini-project for each.
+      <p className="small" style={{ marginTop: 10 }}>
+        We group missing skills into a few high-impact upgrades so you can focus
+        on what moves the needle.
       </p>
 
       {/* FREE */}
@@ -85,14 +86,14 @@ export default function GapLearningPaths({
           {gated.map((g) => (
             <div
               key={g.gap}
-              className="card gatedRow"
+              className="subcard gatedRow"
               style={{ marginTop: 12, cursor: "pointer" }}
               onClick={onUpsell}
               title="Locked — upgrade to view"
             >
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <strong>{g.gap}</strong>
-                <span className="badge gatedDebug">🔒 LOCKED</span>
+                <span className="badge gatedDebug">🔒 Locked</span>
                 <span className="badge gatedDebug">{g.priority}</span>
               </div>
 
@@ -118,7 +119,7 @@ function GapCard({ g }: { g: GapLearningPath }) {
   const projectIdea = g.fastTrack?.projectIdea ?? "—";
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
+    <div className="subcard" style={{ marginTop: 12 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <strong>{g.gap}</strong>
         <span className="badge">{g.priority}</span>

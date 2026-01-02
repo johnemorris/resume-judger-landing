@@ -1,8 +1,11 @@
 :root {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
-  /* Optional accent you can reuse in small places */
-  --accent: #8ab4f8;
+  /* Accent system */
+  --accent: #5aa7ff;
+  --accent-soft: rgba(90, 167, 255, 0.18);
+  --accent-border: rgba(90, 167, 255, 0.32);
+  --accent-strong: rgba(90, 167, 255, 0.55);
 }
 
 * {
@@ -31,15 +34,91 @@ a {
   margin-top: 26px;
 }
 
+/* Report page rhythm: one place to control spacing */
+.reportStack > * + * {
+  margin-top: 16px;
+}
+
+/* Report section wrapper: title + card rhythm */
+.reportSection > * + * {
+  margin-top: 10px;
+}
+
+/* Report typography (keeps overall site typography intact) */
+.pageTitle {
+  font-size: 42px; /* slightly calmer than global h1 */
+  line-height: 1.06;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+
+.sectionKicker {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 6px;
+  opacity: 0.95;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: rgba(233, 238, 247, 0.95);
+}
+
+.sectionHint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(233, 238, 247, 0.62);
+  max-width: 78ch;
+}
+
 /* ---------- Card ---------- */
 .card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* subtle accent wash (global) */
+  background: radial-gradient(
+      120% 120% at 10% 0%,
+      var(--accent-soft),
+      transparent 60%
+    ),
+    rgba(255, 255, 255, 0.055);
+
+  border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 16px;
   padding: 22px;
+}
 
-  /* Helps prevent flex children (like textareas) from overflowing */
-  min-width: 0;
+/* A calmer inner container (no nested glow) */
+.subcard {
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+/* Reduce "crowded" feel inside cards: headings + first paragraphs */
+.card h2,
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  line-height: 1.15;
+}
+
+.card p {
+  margin-bottom: 12px;
+}
+
+/* Remove global card accent wash for the early-access card inside the hero */
+.joinCard {
+  background-image: none; /* kills the radial-gradient layer from .card */
+  background-color: rgba(255, 255, 255, 0.055);
 }
 
 /* ---------- Hero (Homepage) ---------- */
@@ -58,17 +137,35 @@ a {
   );
 }
 
-/* Subtle modern “glow” so it’s not plain */
+/* 1) Keep hero glow, but soften it a bit */
 .hero::before {
-  content: "";
-  position: absolute;
-  inset: -55%;
+  inset: -70%;
   background: radial-gradient(
     circle at 18% 10%,
-    rgba(138, 180, 248, 0.22),
-    transparent 58%
+    rgba(90, 167, 255, 0.14),
+    transparent 62%
   );
-  pointer-events: none;
+}
+
+/* --- kill nested glow inside hero (hard override) --- */
+.hero .card {
+  background-image: none !important; /* removes the radial gradient layer */
+  background-color: rgba(255, 255, 255, 0.055) !important;
+}
+
+/* If the hero card uses an overlay glow, keep it contained */
+.heroCard {
+  overflow: hidden; /* ensures ::before doesn't visually "wash" children */
+}
+
+/* Make sure the glow layer sits behind content */
+.heroCard::before {
+  z-index: 0;
+}
+
+.heroCard > * {
+  position: relative;
+  z-index: 1;
 }
 
 .heroBadge,
@@ -90,20 +187,21 @@ a {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #8ab4f8;
-  background: rgba(138, 180, 248, 0.12);
-  border: 1px solid rgba(138, 180, 248, 0.25);
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--accent-border);
 }
 
 .heroTitle {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 
 .heroSubtitle {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   color: rgba(233, 238, 247, 0.82);
   font-size: 16px;
   max-width: 760px;
+  line-height: 1.45;
 }
 
 .heroCtas {
@@ -141,7 +239,7 @@ a {
 h1 {
   font-size: 44px;
   line-height: 1.05;
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   letter-spacing: -0.02em;
 }
 
@@ -149,12 +247,14 @@ p {
   margin: 0 0 14px;
   color: rgba(233, 238, 247, 0.85);
   font-size: 18px;
+  line-height: 1.5;
 }
 
 /* smaller helper text */
 .small {
   font-size: 13px;
   color: rgba(233, 238, 247, 0.65);
+  line-height: 1.45;
 }
 
 .muted {
@@ -165,7 +265,7 @@ p {
 .grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .grid3 {
@@ -175,17 +275,25 @@ p {
   margin-top: 16px;
 }
 
-@media (max-width: 860px) {
-  .grid {
-    grid-template-columns: 1fr;
+@media (max-width: 1080px) {
+  .grid,
+  .grid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+@media (max-width: 720px) {
+  .grid,
   .grid3 {
     grid-template-columns: 1fr;
   }
 
   h1 {
     font-size: 36px;
+  }
+
+  .pageTitle {
+    font-size: 34px;
   }
 }
 
@@ -236,8 +344,8 @@ input[type="email"] {
 }
 
 input[type="email"]:focus {
-  border-color: rgba(138, 180, 248, 0.5);
-  box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.12);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 /* ---------- Buttons ---------- */
@@ -250,7 +358,7 @@ button {
   cursor: pointer;
   font-weight: 700;
   transition: transform 0.05s ease, background 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 button:hover {
@@ -269,13 +377,15 @@ button:disabled {
 
 /* Optional button variants */
 button.primary {
-  background: rgba(138, 180, 248, 0.18);
-  border-color: rgba(138, 180, 248, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0);
 }
 
 button.primary:hover {
-  background: rgba(138, 180, 248, 0.24);
-  border-color: rgba(138, 180, 248, 0.38);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 button.secondary {
@@ -324,8 +434,8 @@ textarea {
 }
 
 textarea:focus {
-  border-color: rgba(138, 180, 248, 0.5);
-  box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.12);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 /* ---------- Nav ---------- */
@@ -334,15 +444,15 @@ textarea:focus {
   top: 0;
   z-index: 20;
 
-  /* This is the key: a slightly lighter “glass” tint than the page */
   background: rgba(15, 18, 26, 0.78);
   backdrop-filter: blur(12px);
 
-  /* Separation: 2-edge treatment */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 10px 28px rgba(0, 0, 0, 0.55);
-  border-top: 1px solid rgba(138, 180, 248, 0.35);
+
+  /* subtle accent line (brand separation) */
+  border-top: 1px solid var(--accent-border);
 }
 
 .navInner {
@@ -357,7 +467,7 @@ textarea:focus {
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 16px; /* 👈 this is the main fix */
+  gap: 16px;
 }
 
 .navLinks a {
@@ -384,8 +494,8 @@ textarea:focus {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: rgba(138, 180, 248, 0.9);
-  box-shadow: 0 0 0 4px rgba(138, 180, 248, 0.12);
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .earlyAccess {
@@ -397,9 +507,9 @@ textarea:focus {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #8ab4f8;
-  background: rgba(138, 180, 248, 0.12);
-  border: 1px solid rgba(138, 180, 248, 0.25);
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--accent-border);
 }
 
 /* ---- Gated (debug / pre-blur) ---- */
