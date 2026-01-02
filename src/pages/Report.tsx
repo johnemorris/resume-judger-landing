@@ -56,11 +56,14 @@ export default function Report() {
   const hasMoreMissing = missingCount > FREE_MISSING_MAX;
 
   const breakdownEntries = [
-    ["Frontend (React/TS)", r.scores.breakdown.frontendReactTypescript],
-    ["Backend (Node/APIs)", r.scores.breakdown.backendNodeApis],
-    ["AWS/Cloud", r.scores.breakdown.awsCloud],
-    ["DevOps/IaC", r.scores.breakdown.devopsCicdIac],
-    ["Product/UX", r.scores.breakdown.productUxB2c],
+    [
+      "Frontend (React / TypeScript)",
+      r.scores.breakdown.frontendReactTypescript,
+    ],
+    ["Backend (Node / APIs)", r.scores.breakdown.backendNodeApis],
+    ["AWS / Cloud", r.scores.breakdown.awsCloud],
+    ["DevOps / CI / IaC", r.scores.breakdown.devopsCicdIac],
+    ["Product / UX", r.scores.breakdown.productUxB2c],
     ["Leadership", r.scores.breakdown.leadershipMentorship],
   ] as const;
 
@@ -71,19 +74,20 @@ export default function Report() {
     <div className="container">
       <h1 className="pageTitle">Resume Match Report</h1>
       <p className="small">
-        Target role: <strong>{r.meta.roleTitle}</strong> · Fit:{" "}
+        Target role: <strong>{r.meta.roleTitle}</strong> · Overall fit:{" "}
         <strong>{r.meta.overallFit}</strong>
       </p>
 
       {/* This wrapper controls spacing rhythm for the entire report */}
       <div className="reportStack">
+        {/* SKILLS COVERAGE */}
         <div className="reportSection">
           <div>
-            <div className="sectionKicker">Inputs</div>
+            <div className="sectionKicker">Coverage</div>
             <h2 className="sectionTitle">Skills Coverage</h2>
             <p className="sectionHint">
-              Quick read on matched vs missing skills based on the job
-              description keywords.
+              How well your resume reflects the skills and signals emphasized in
+              the job description.
             </p>
           </div>
 
@@ -98,13 +102,14 @@ export default function Report() {
           />
         </div>
 
+        {/* OVERALL MATCH */}
         <div className="reportSection">
           <div>
-            <div className="sectionKicker">Diagnose</div>
+            <div className="sectionKicker">Summary</div>
             <h2 className="sectionTitle">Overall Match</h2>
             <p className="sectionHint">
-              Your current fit for this role, based on the resume + job
-              description overlap.
+              A high-level view of how closely your resume aligns with this role
+              — based on signal strength, not perfection.
             </p>
           </div>
 
@@ -114,38 +119,42 @@ export default function Report() {
           />
         </div>
 
+        {/* SCORE BREAKDOWN */}
         <div className="reportSection">
           <div>
-            <div className="sectionKicker">Diagnose</div>
+            <div className="sectionKicker">Signals</div>
             <h2 className="sectionTitle">Score Breakdown</h2>
             <p className="sectionHint">
-              Where you’re strong vs where the resume needs clearer signals.
+              Where your resume sends strong signals — and where it’s quieter
+              than the role expects.
             </p>
           </div>
 
           <ScoreBreakdown entries={breakdownEntries} />
         </div>
 
+        {/* HIGH-IMPACT FIXES */}
         <div className="reportSection">
           <div>
-            <div className="sectionKicker">Fix first</div>
+            <div className="sectionKicker">Act first</div>
             <h2 className="sectionTitle">High-Impact Fixes</h2>
             <p className="sectionHint">
-              “Add-if-true” bullets and ATS-friendly wording changes with the
-              biggest payoff.
+              Targeted wording and structure changes that improve clarity and
+              recruiter confidence without rewriting your resume.
             </p>
           </div>
 
           <SurgicalEditsCard p0={p0} p1={p1} />
         </div>
 
+        {/* SKILL GAPS */}
         <div className="reportSection">
           <div>
-            <div className="sectionKicker">Close gaps</div>
+            <div className="sectionKicker">Grow</div>
             <h2 className="sectionTitle">Skill Gaps to Close</h2>
             <p className="sectionHint">
-              Mini-project ideas and learning steps tied to this role. (Some
-              items are premium.)
+              High-leverage learning opportunities that meaningfully improve
+              your fit for this role over time.
             </p>
           </div>
 
@@ -156,13 +165,14 @@ export default function Report() {
           />
         </div>
 
+        {/* REQUIREMENTS */}
         <div className="reportSection">
           <div>
             <div className="sectionKicker">Verify</div>
             <h2 className="sectionTitle">Requirements Coverage</h2>
             <p className="sectionHint">
-              What the job explicitly requires, and whether your resume clearly
-              shows it.
+              How clearly your resume demonstrates the role’s explicit
+              requirements.
             </p>
           </div>
 
@@ -171,12 +181,13 @@ export default function Report() {
           />
         </div>
 
+        {/* INTERVIEW PREP */}
         <div className="reportSection">
           <div>
-            <div className="sectionKicker">Coming soon</div>
+            <div className="sectionKicker">Prepare</div>
             <h2 className="sectionTitle">Interview Prep</h2>
             <p className="sectionHint">
-              Curated question links and role-specific prep suggestions.
+              Role- and company-specific interview preparation resources.
             </p>
           </div>
 
