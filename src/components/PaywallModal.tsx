@@ -21,7 +21,10 @@ export default function PaywallModal({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.6)",
+
+        /* DARKER BACKDROP — page should disappear */
+        background: "rgba(0, 0, 0, 0.78)",
+
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -36,6 +39,13 @@ export default function PaywallModal({
           position: "relative",
           maxWidth: 520,
           width: "100%",
+
+          /* STRONGER CARD SURFACE — overrides global card translucency */
+          background:
+            "linear-gradient(180deg, rgba(18,22,32,0.98), rgba(14,18,26,0.96))",
+          border: "1px solid rgba(255,255,255,0.14)",
+          boxShadow:
+            "0 30px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04)",
         }}
       >
         <button
@@ -50,30 +60,44 @@ export default function PaywallModal({
             fontSize: 18,
             cursor: "pointer",
             color: "inherit",
+            opacity: 0.75,
           }}
         >
           ×
         </button>
 
-        <h3 style={{ marginTop: 0 }}>Unlock the full missing-skills list</h3>
+        <h3 style={{ marginTop: 0 }}>Unlock the full report</h3>
 
         <p className="small" style={{ marginTop: 8 }}>
-          Free shows the top {freeMissingMax}. Premium shows all missing skills,
-          ordered by impact — plus guided tutorials and projects.
+          Free shows the top <strong>{freeMissingMax}</strong> missing skills
+          and the highest-impact fixes. Premium unlocks the full depth.
         </p>
 
-        <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+        <div className="subcard" style={{ marginTop: 14 }}>
+          <p className="small" style={{ margin: 0 }}>
+            <strong>Premium unlocks:</strong>
+          </p>
+          <ul style={{ marginTop: 10 }}>
+            <li>All missing skills (not just the top {freeMissingMax})</li>
+            <li>Nice-to-have resume improvements (P1 polish)</li>
+            <li>Fast-track learning plan: tutorials, mini-project, timebox</li>
+            <li>All additional skill gaps beyond the free preview</li>
+          </ul>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
           <button type="button" onClick={onClose}>
             Not now
           </button>
 
-          <button type="button" onClick={onUnlock}>
-            Unlock Premium
+          <button type="button" className="primary" onClick={onUnlock}>
+            Unlock full report
           </button>
         </div>
 
-        <p className="small" style={{ marginTop: 12 }}>
-          (Stub) Payment flow coming next.
+        <p className="small" style={{ marginTop: 12, marginBottom: 0 }}>
+          Payment is not wired yet — this is a preview of the premium
+          experience.
         </p>
       </div>
     </div>

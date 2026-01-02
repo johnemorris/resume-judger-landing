@@ -28,8 +28,14 @@ export default function Report() {
   const hasJD = jd.trim().length > 0;
   const hasResume = resume.trim().length > 0;
 
-  // Premium stub
+  // Premium stub (later: read from user/account)
+  const isPremium = false;
+
+  // Premium boundaries (MVP)
   const FREE_MISSING_MAX = 2;
+  const FREE_GAPS_MAX = 2;
+  const FREE_P1_MAX = 0; // lock all P1 behind premium (P0 remains free)
+
   const [showPaywall, setShowPaywall] = useState(false);
 
   // If missing required inputs, do NOT show report sections.
@@ -53,7 +59,7 @@ export default function Report() {
 
   const missingCount = missing.length;
   const missingPreview = missing.slice(0, FREE_MISSING_MAX);
-  const hasMoreMissing = missingCount > FREE_MISSING_MAX;
+  const hasMoreMissing = !isPremium && missingCount > FREE_MISSING_MAX;
 
   const breakdownEntries = [
     [
@@ -78,7 +84,6 @@ export default function Report() {
         <strong>{r.meta.overallFit}</strong>
       </p>
 
-      {/* This wrapper controls spacing rhythm for the entire report */}
       <div className="reportStack">
         {/* SKILLS COVERAGE */}
         <div className="reportSection">
@@ -108,8 +113,8 @@ export default function Report() {
             <div className="sectionKicker">Summary</div>
             <h2 className="sectionTitle">Overall Match</h2>
             <p className="sectionHint">
-              A high-level view of how closely your resume aligns with this role
-              — based on signal strength, not perfection.
+              A high-level view of alignment — based on signal strength, not
+              perfection.
             </p>
           </div>
 
@@ -139,12 +144,17 @@ export default function Report() {
             <div className="sectionKicker">Act first</div>
             <h2 className="sectionTitle">High-Impact Fixes</h2>
             <p className="sectionHint">
-              Targeted wording and structure changes that improve clarity and
-              recruiter confidence without rewriting your resume.
+              Targeted edits that improve clarity without rewriting your resume.
             </p>
           </div>
 
-          <SurgicalEditsCard p0={p0} p1={p1} />
+          <SurgicalEditsCard
+            p0={p0}
+            p1={p1}
+            isPremium={isPremium}
+            freeSecondaryMax={FREE_P1_MAX}
+            onUpsell={() => setShowPaywall(true)}
+          />
         </div>
 
         {/* SKILL GAPS */}
@@ -153,14 +163,14 @@ export default function Report() {
             <div className="sectionKicker">Grow</div>
             <h2 className="sectionTitle">Skill Gaps to Close</h2>
             <p className="sectionHint">
-              High-leverage learning opportunities that meaningfully improve
-              your fit for this role over time.
+              High-leverage learning opportunities tied to this role.
             </p>
           </div>
 
           <GapLearningPaths
             gaps={r.gapLearningPaths}
-            isPremium={false} // stub for now
+            isPremium={isPremium}
+            freeMax={FREE_GAPS_MAX}
             onUpsell={() => setShowPaywall(true)}
           />
         </div>
@@ -195,7 +205,6 @@ export default function Report() {
         </div>
       </div>
 
-      {/* PREMIUM MODAL (STUB) */}
       {showPaywall && (
         <PaywallModal
           open={showPaywall}

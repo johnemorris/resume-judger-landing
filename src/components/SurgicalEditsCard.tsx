@@ -87,29 +87,59 @@ function SectionEdits({
 
 /**
  * User-facing copy:
- * - "High-impact fixes" = formerly P0
- * - "Nice-to-have improvements" = formerly P1
+ * - P0 remains free (core value)
+ * - P1 is premium (nice-to-have polish)
  */
 export default function SurgicalEditsCard({
   p0,
   p1,
-  title = "Fix these first",
   primaryLabel = "High-impact fixes",
   secondaryLabel = "Nice-to-have improvements",
+  isPremium,
+  freeSecondaryMax = 0,
+  onUpsell,
 }: {
   p0: ReadonlyArray<SurgicalEdit>;
   p1: ReadonlyArray<SurgicalEdit>;
-  title?: string;
   primaryLabel?: string;
   secondaryLabel?: string;
+
+  isPremium: boolean;
+  freeSecondaryMax?: number;
+  onUpsell: () => void;
 }) {
+  const showLockedSecondary = !isPremium && p1.length > freeSecondaryMax;
+  const secondaryFree = isPremium ? p1 : p1.slice(0, freeSecondaryMax);
+  const secondaryLockedCount = Math.max(0, p1.length - secondaryFree.length);
+
   return (
     <div className="card">
       <SectionEdits title={primaryLabel} edits={p0} />
 
       <div style={{ marginTop: 14 }} />
 
-      <SectionEdits title={secondaryLabel} edits={p1} />
+      <SectionEdits title={secondaryLabel} edits={secondaryFree} />
+
+      {showLockedSecondary && secondaryLockedCount > 0 && (
+        <div
+          className="subcard gatedRow"
+          style={{ marginTop: 12, cursor: "pointer" }}
+          onClick={onUpsell}
+          title="Locked — upgrade to view"
+        >
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <strong>Unlock the rest</strong>
+            <span className="badge gatedDebug">
+              🔒 {secondaryLockedCount} locked
+            </span>
+          </div>
+
+          <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>
+            Nice-to-have improvements are premium. They’re great for polishing
+            your resume once the high-impact fixes are done.
+          </p>
+        </div>
+      )}
 
       <p className="small" style={{ marginTop: 14, marginBottom: 0 }}>
         Tip: Only use “Add-if-true” suggestions if they reflect real experience.
