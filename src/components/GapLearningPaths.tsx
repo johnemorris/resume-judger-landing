@@ -1,5 +1,3 @@
-import React from "react";
-
 /** ---------- Types that match BOTH possible data shapes ---------- */
 
 type SimpleTutorial = { label: string; href: string };
