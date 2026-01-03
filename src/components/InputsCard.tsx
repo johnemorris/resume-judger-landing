@@ -17,6 +17,9 @@ type InputsCardProps = {
 
   // Called when user clicks any gated item or "+N more"
   onMoreMissing: () => void;
+
+  // NEW: optional tooltip/meta per missing keyword (e.g. impact reason)
+  missingMeta?: Record<string, string>;
 };
 
 export default function InputsCard({
@@ -27,6 +30,7 @@ export default function InputsCard({
   missingCount,
   hasMoreMissing,
   onMoreMissing,
+  missingMeta,
 }: InputsCardProps) {
   const FREE_MISSING_MAX = missingPreview.length; // derived from what Report passed in
   const overflowCount = Math.max(0, missingCount - FREE_MISSING_MAX);
@@ -115,7 +119,12 @@ export default function InputsCard({
             <div className="badgeRow" style={{ marginTop: 10 }}>
               {/* Free preview badges */}
               {missingPreview.map((t) => (
-                <span key={t} className="badge">
+                <span
+                  key={t}
+                  className="badge"
+                  title={missingMeta?.[t] ?? undefined}
+                  style={{ cursor: missingMeta?.[t] ? "help" : undefined }}
+                >
                   {t}
                 </span>
               ))}
@@ -126,7 +135,7 @@ export default function InputsCard({
                   className="badge gatedDebug"
                   onClick={onMoreMissing}
                   style={{ cursor: "pointer" }}
-                  title="Locked — upgrade to view all missing skills"
+                  title="Upgrade to view the full missing list ranked by impact."
                 >
                   +{overflowCount} more
                 </span>
@@ -135,8 +144,7 @@ export default function InputsCard({
 
             <p className="small" style={{ marginTop: 10, marginBottom: 0 }}>
               Tip: Missing skills aren’t “bad” — they’re your fastest upgrade
-              targets. We’ll later add learning links and micro-project ideas
-              for each.
+              targets. Only add keywords if they reflect real experience.
             </p>
           </>
         )}

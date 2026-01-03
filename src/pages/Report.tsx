@@ -28,21 +28,14 @@ export default function Report() {
   const hasJD = jd.trim().length > 0;
   const hasResume = resume.trim().length > 0;
 
-  // Premium stub (later: read from user/account)
-  const isPremium = false;
-
-  // Premium boundaries (MVP)
+  // Premium stub
   const FREE_MISSING_MAX = 2;
-  const FREE_GAPS_MAX = 2;
-  const FREE_P1_MAX = 0; // lock all P1 behind premium (P0 remains free)
-
   const [showPaywall, setShowPaywall] = useState(false);
 
-  // If missing required inputs, do NOT show report sections.
   if (!hasJD || !hasResume) {
     return (
       <div className="container">
-        <h1 className="pageTitle">Resume Match Report</h1>
+        <h1>Resume Match Report</h1>
         <MissingInputCard hasJD={hasJD} hasResume={hasResume} />
       </div>
     );
@@ -59,17 +52,14 @@ export default function Report() {
 
   const missingCount = missing.length;
   const missingPreview = missing.slice(0, FREE_MISSING_MAX);
-  const hasMoreMissing = !isPremium && missingCount > FREE_MISSING_MAX;
+  const hasMoreMissing = missingCount > FREE_MISSING_MAX;
 
   const breakdownEntries = [
-    [
-      "Frontend (React / TypeScript)",
-      r.scores.breakdown.frontendReactTypescript,
-    ],
-    ["Backend (Node / APIs)", r.scores.breakdown.backendNodeApis],
-    ["AWS / Cloud", r.scores.breakdown.awsCloud],
-    ["DevOps / CI / IaC", r.scores.breakdown.devopsCicdIac],
-    ["Product / UX", r.scores.breakdown.productUxB2c],
+    ["Frontend (React/TS)", r.scores.breakdown.frontendReactTypescript],
+    ["Backend (Node/APIs)", r.scores.breakdown.backendNodeApis],
+    ["AWS/Cloud", r.scores.breakdown.awsCloud],
+    ["DevOps/IaC", r.scores.breakdown.devopsCicdIac],
+    ["Product/UX", r.scores.breakdown.productUxB2c],
     ["Leadership", r.scores.breakdown.leadershipMentorship],
   ] as const;
 
@@ -78,139 +68,61 @@ export default function Report() {
 
   return (
     <div className="container">
-      <h1 className="pageTitle">Resume Match Report</h1>
+      <h1>Resume Match Report</h1>
+
       <p className="small">
-        Target role: <strong>{r.meta.roleTitle}</strong> · Overall fit:{" "}
+        Target role: <strong>{r.meta.roleTitle}</strong> · Fit:{" "}
         <strong>{r.meta.overallFit}</strong>
       </p>
 
       <div className="reportStack">
-        {/* SKILLS COVERAGE */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Coverage</div>
-            <h2 className="sectionTitle">Skills Coverage</h2>
-            <p className="sectionHint">
-              How well your resume reflects the skills and signals emphasized in
-              the job description.
-            </p>
-          </div>
+        <InputsCard
+          roleGuess={roleGuess}
+          company={company}
+          matched={matched}
+          missingPreview={missingPreview}
+          missingCount={missingCount}
+          hasMoreMissing={hasMoreMissing}
+          onMoreMissing={() => setShowPaywall(true)}
+        />
 
-          <InputsCard
-            roleGuess={roleGuess}
-            company={company}
-            matched={matched}
-            missingPreview={missingPreview}
-            missingCount={missingCount}
-            hasMoreMissing={hasMoreMissing}
-            onMoreMissing={() => setShowPaywall(true)}
-          />
-        </div>
+        <OverallMatchCard
+          overallScore={r.scores.overall}
+          overallFit={r.meta.overallFit}
+        />
 
-        {/* OVERALL MATCH */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Summary</div>
-            <h2 className="sectionTitle">Overall Match</h2>
-            <p className="sectionHint">
-              A high-level view of alignment — based on signal strength, not
-              perfection.
-            </p>
-          </div>
+        <ScoreBreakdown entries={breakdownEntries} />
 
-          <OverallMatchCard
-            overallScore={r.scores.overall}
-            overallFit={r.meta.overallFit}
-          />
-        </div>
+        {/* FIX: pass required premium props expected by current SurgicalEditsCard type */}
+        <SurgicalEditsCard
+          p0={p0}
+          p1={p1}
+          isPremium={false}
+          freeSecondaryMax={0}
+          onUpsell={() => setShowPaywall(true)}
+        />
 
-        {/* SCORE BREAKDOWN */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Signals</div>
-            <h2 className="sectionTitle">Score Breakdown</h2>
-            <p className="sectionHint">
-              Where your resume sends strong signals — and where it’s quieter
-              than the role expects.
-            </p>
-          </div>
+        {/* GapLearningPaths already matches your current component signature */}
+        <GapLearningPaths
+          gaps={r.gapLearningPaths}
+          isPremium={false}
+          onUpsell={() => setShowPaywall(true)}
+        />
 
-          <ScoreBreakdown entries={breakdownEntries} />
-        </div>
+        <RequirementsCoverageCard required={r.requirementsCoverage.required} />
 
-        {/* HIGH-IMPACT FIXES */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Act first</div>
-            <h2 className="sectionTitle">High-Impact Fixes</h2>
-            <p className="sectionHint">
-              Targeted edits that improve clarity without rewriting your resume.
-            </p>
-          </div>
-
-          <SurgicalEditsCard
-            p0={p0}
-            p1={p1}
-            isPremium={isPremium}
-            freeSecondaryMax={FREE_P1_MAX}
-            onUpsell={() => setShowPaywall(true)}
-          />
-        </div>
-
-        {/* SKILL GAPS */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Grow</div>
-            <h2 className="sectionTitle">Skill Gaps to Close</h2>
-            <p className="sectionHint">
-              High-leverage learning opportunities tied to this role.
-            </p>
-          </div>
-
-          <GapLearningPaths
-            gaps={r.gapLearningPaths}
-            isPremium={isPremium}
-            freeMax={FREE_GAPS_MAX}
-            onUpsell={() => setShowPaywall(true)}
-          />
-        </div>
-
-        {/* REQUIREMENTS */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Verify</div>
-            <h2 className="sectionTitle">Requirements Coverage</h2>
-            <p className="sectionHint">
-              How clearly your resume demonstrates the role’s explicit
-              requirements.
-            </p>
-          </div>
-
-          <RequirementsCoverageCard
-            required={r.requirementsCoverage.required}
-          />
-        </div>
-
-        {/* INTERVIEW PREP */}
-        <div className="reportSection">
-          <div>
-            <div className="sectionKicker">Prepare</div>
-            <h2 className="sectionTitle">Interview Prep</h2>
-            <p className="sectionHint">
-              Role- and company-specific interview preparation resources.
-            </p>
-          </div>
-
-          <InterviewLinksStub />
-        </div>
+        <InterviewLinksStub />
       </div>
 
       {showPaywall && (
         <PaywallModal
           open={showPaywall}
           freeMissingMax={FREE_MISSING_MAX}
+          missingCount={missingCount}
           onClose={() => setShowPaywall(false)}
-          onUnlock={() => alert("TODO: Hook up pricing / checkout")}
+          onUnlock={() => {
+            // v1: no payments yet — modal handles email capture
+          }}
         />
       )}
     </div>
