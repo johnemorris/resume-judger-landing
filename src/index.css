@@ -512,18 +512,45 @@ textarea:focus {
   border: 1px solid var(--accent-border);
 }
 
-/* ---- Gated (debug / pre-blur) ---- */
+/* ---- Gated (blur / premium-locked) ---- */
+/* ---- Gated badge (blurred / premium-locked) ---- */
 .gatedDebug {
-  color: #ff6b6b;
-  border-color: rgba(255, 107, 107, 0.6);
-  background: rgba(255, 107, 107, 0.12);
+  position: relative;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+
+  /* Default = obfuscate (used for hidden skill pills) */
+  filter: blur(3px);
+  opacity: 0.85;
+
+  user-select: none;
 }
 
+/* IMPORTANT:
+   CTA/affordance badges (like "+N more" or "🔒 locked") have title attributes.
+   Those should NOT be blurred. */
+.badge.gatedDebug[title] {
+  filter: none;
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Ensure no overlay text is added */
+.gatedDebug::after {
+  content: none;
+}
+
+/* Container stays readable structurally, but contents get blurred */
 .gatedRow {
-  border: 1px solid rgba(255, 107, 107, 0.35);
-  background: rgba(255, 107, 107, 0.08);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
 }
 
-.gatedRow * {
-  color: rgba(255, 107, 107, 0.95) !important;
+/* Ensure content sits under the blur layer */
+.gatedRow > * {
+  position: relative;
+  z-index: 0;
 }

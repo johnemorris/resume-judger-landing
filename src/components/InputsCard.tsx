@@ -33,27 +33,24 @@ export default function InputsCard({
 
   return (
     <div className="card">
-      {/* Subtle context line (Report section header already carries the title) */}
-      <p className="small" style={{ margin: 0 }}>
+      <p className="small" style={{ marginTop: 0 }}>
         Signals detected from the job description and your resume.
       </p>
 
       {(roleGuess || company) && (
-        <div style={{ marginTop: 10 }}>
-          <p className="small" style={{ margin: 0 }}>
-            {roleGuess && (
-              <>
-                <strong>Role guess:</strong> {roleGuess}
-                {company ? " · " : ""}
-              </>
-            )}
-            {company && (
-              <>
-                <strong>Company guess:</strong> {company}
-              </>
-            )}
-          </p>
-        </div>
+        <p className="small" style={{ marginTop: 6 }}>
+          {roleGuess && (
+            <>
+              <strong>Role guess:</strong> {roleGuess}
+              {company ? " · " : ""}
+            </>
+          )}
+          {company && (
+            <>
+              <strong>Company guess:</strong> {company}
+            </>
+          )}
+        </p>
       )}
 
       <hr />
@@ -61,7 +58,6 @@ export default function InputsCard({
       {/* MATCHED SKILLS */}
       <div>
         <div
-          className="inputsHeaderRow"
           style={{
             display: "flex",
             gap: 10,
@@ -96,7 +92,6 @@ export default function InputsCard({
       {/* MISSING SKILLS */}
       <div>
         <div
-          className="inputsHeaderRow"
           style={{
             display: "flex",
             gap: 10,
@@ -117,15 +112,15 @@ export default function InputsCard({
           </p>
         ) : (
           <>
-            {/* Free preview badges */}
             <div className="badgeRow" style={{ marginTop: 10 }}>
+              {/* Free preview badges */}
               {missingPreview.map((t) => (
                 <span key={t} className="badge">
                   {t}
                 </span>
               ))}
 
-              {/* Debug-gated affordance (NOT blur yet) */}
+              {/* Gated affordance */}
               {hasMoreMissing && overflowCount > 0 && (
                 <span
                   className="badge gatedDebug"
@@ -138,29 +133,7 @@ export default function InputsCard({
               )}
             </div>
 
-            {/* Optional: show a couple of red “gated” examples so you can SEE the gated set. */}
-            {hasMoreMissing && (
-              <div className="badgeRow" style={{ marginTop: 8 }}>
-                <span
-                  className="badge gatedDebug"
-                  onClick={onMoreMissing}
-                  style={{ cursor: "pointer" }}
-                  title="Locked — upgrade to view"
-                >
-                  🔒 locked
-                </span>
-                <span
-                  className="badge gatedDebug"
-                  onClick={onMoreMissing}
-                  style={{ cursor: "pointer" }}
-                  title="Locked — upgrade to view"
-                >
-                  🔒 locked
-                </span>
-              </div>
-            )}
-
-            <p className="small" style={{ marginTop: 10 }}>
+            <p className="small" style={{ marginTop: 10, marginBottom: 0 }}>
               Tip: Missing skills aren’t “bad” — they’re your fastest upgrade
               targets. We’ll later add learning links and micro-project ideas
               for each.
