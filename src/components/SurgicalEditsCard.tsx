@@ -1,5 +1,3 @@
-import React from "react";
-
 type SurgicalEdit = {
   priority: string;
   where: string;
