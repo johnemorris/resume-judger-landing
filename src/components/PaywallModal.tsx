@@ -208,10 +208,6 @@ export default function PaywallModal({
                 Unlock full report
               </button>
             </div>
-
-            <p className="small" style={{ marginTop: 12, marginBottom: 0 }}>
-              Payments aren’t live yet — want an email when it’s ready?
-            </p>
           </>
         )}
 
