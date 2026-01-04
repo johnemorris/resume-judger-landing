@@ -15,6 +15,7 @@ import { getStoredInput } from "../utils/storage";
 import { guessCompany, guessRole } from "../utils/guess";
 import { extractKeywords } from "../utils/keywordExtraction";
 import { splitMatchedMissing } from "../utils/keywordMatch";
+import { computeKeywordImportance } from "../utils/keywordImportance";
 
 const STORAGE_KEY = "rj_last_input_v1";
 
@@ -28,7 +29,6 @@ export default function Report() {
   const hasJD = jd.trim().length > 0;
   const hasResume = resume.trim().length > 0;
 
-  // Premium stub
   const FREE_MISSING_MAX = 2;
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -41,18 +41,26 @@ export default function Report() {
     );
   }
 
-  const company = jd ? guessCompany(jd) : undefined;
-  const roleGuess = jd ? guessRole(jd) : undefined;
+  const company = guessCompany(jd);
+  const roleGuess = guessRole(jd);
 
-  const keywords = jd ? extractKeywords(jd) : [];
+  const keywords = extractKeywords(jd);
   const { matched, missing } =
     keywords.length > 0
       ? splitMatchedMissing(keywords, resume)
       : { matched: [], missing: [] };
 
-  const missingCount = missing.length;
-  const missingPreview = missing.slice(0, FREE_MISSING_MAX);
-  const hasMoreMissing = missingCount > FREE_MISSING_MAX;
+  // ⭐ NEW: importance-aware ordering
+  const importance = computeKeywordImportance(jd, missing);
+
+  const missingSorted = [...missing].sort((a, b) => {
+    const ia = importance.get(a)?.score ?? 0;
+    const ib = importance.get(b)?.score ?? 0;
+    return ib - ia;
+  });
+
+  const missingPreview = missingSorted.slice(0, FREE_MISSING_MAX);
+  const hasMoreMissing = missingSorted.length > FREE_MISSING_MAX;
 
   const breakdownEntries = [
     ["Frontend (React/TS)", r.scores.breakdown.frontendReactTypescript],
@@ -69,7 +77,6 @@ export default function Report() {
   return (
     <div className="container">
       <h1>Resume Match Report</h1>
-
       <p className="small">
         Target role: <strong>{r.meta.roleTitle}</strong> · Fit:{" "}
         <strong>{r.meta.overallFit}</strong>
@@ -81,7 +88,7 @@ export default function Report() {
           company={company}
           matched={matched}
           missingPreview={missingPreview}
-          missingCount={missingCount}
+          missingCount={missingSorted.length}
           hasMoreMissing={hasMoreMissing}
           onMoreMissing={() => setShowPaywall(true)}
         />
@@ -92,25 +99,18 @@ export default function Report() {
         />
 
         <ScoreBreakdown entries={breakdownEntries} />
-
-        {/* FIX: pass required premium props expected by current SurgicalEditsCard type */}
         <SurgicalEditsCard
           p0={p0}
           p1={p1}
           isPremium={false}
-          freeSecondaryMax={0}
           onUpsell={() => setShowPaywall(true)}
         />
-
-        {/* GapLearningPaths already matches your current component signature */}
         <GapLearningPaths
           gaps={r.gapLearningPaths}
           isPremium={false}
           onUpsell={() => setShowPaywall(true)}
         />
-
         <RequirementsCoverageCard required={r.requirementsCoverage.required} />
-
         <InterviewLinksStub />
       </div>
 
@@ -118,11 +118,9 @@ export default function Report() {
         <PaywallModal
           open={showPaywall}
           freeMissingMax={FREE_MISSING_MAX}
-          missingCount={missingCount}
+          missingCount={missingSorted.length}
           onClose={() => setShowPaywall(false)}
-          onUnlock={() => {
-            // v1: no payments yet — modal handles email capture
-          }}
+          onUnlock={() => {}}
         />
       )}
     </div>
