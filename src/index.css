@@ -592,3 +592,32 @@ input[type="email"] {
   text-overflow: clip;
   white-space: nowrap;
 }
+
+/* ---------- Analyze spinner overlay ---------- */
+.analyzeOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(11, 13, 18, 0.75);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

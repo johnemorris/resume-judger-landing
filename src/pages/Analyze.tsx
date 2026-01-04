@@ -30,6 +30,7 @@ export default function Analyze() {
   const navigate = useNavigate();
   const [jd, setJd] = useState("");
   const [resume, setResume] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Prefill on mount
   useEffect(() => {
@@ -52,8 +53,19 @@ export default function Analyze() {
   }, [jd, resume]);
 
   function handleAnalyze() {
+    if (isAnalyzing) return;
+
+    setIsAnalyzing(true);
     writeStored({ jd, resume, savedAtISO: new Date().toISOString() });
-    navigate("/report");
+
+    // Intentional pause for perceived work
+    const delay = 800 + Math.random() * 300;
+
+    window.setTimeout(() => {
+      setIsAnalyzing(false);
+
+      navigate("/report");
+    }, delay);
   }
 
   function clearJD() {
@@ -74,6 +86,15 @@ export default function Analyze() {
 
   return (
     <div className="container">
+      {isAnalyzing && (
+        <div className="analyzeOverlay">
+          <div className="spinner" />
+          <p className="small" style={{ marginTop: 12 }}>
+            Analyzing your resume against the job description…
+          </p>
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",
@@ -96,9 +117,9 @@ export default function Analyze() {
           </button>
           <button
             onClick={handleAnalyze}
-            disabled={!jd.trim() || !resume.trim()}
+            disabled={!jd.trim() || !resume.trim() || isAnalyzing}
           >
-            Analyze
+            {isAnalyzing ? "Analyzing…" : "Analyze"}
           </button>
         </div>
       </div>
