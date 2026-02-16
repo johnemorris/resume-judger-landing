@@ -1,3 +1,7 @@
+import React from "react";
+
+type Tier = "high" | "med" | "low";
+
 type InputsCardProps = {
   roleGuess?: string;
   company?: string;
@@ -16,9 +20,23 @@ type InputsCardProps = {
   // Called when user clicks any gated item or "+N more"
   onMoreMissing: () => void;
 
-  // NEW: optional tooltip/meta per missing keyword (e.g. impact reason)
+  // NEW: tier per missing keyword (importance only, not "why")
+  missingTier?: Record<string, Tier>;
+
+  // Optional tooltip/meta per missing keyword ("why") — keep behind paywall for v1
   missingMeta?: Record<string, string>;
 };
+
+function normalizeKey(s: string) {
+  return (s || "").trim().toLowerCase();
+}
+
+function tierClass(tier?: Tier) {
+  if (tier === "high") return "badgeHot";
+  if (tier === "med") return "badgeWarm";
+  if (tier === "low") return "badgeCool";
+  return "";
+}
 
 export default function InputsCard({
   roleGuess,
@@ -28,6 +46,7 @@ export default function InputsCard({
   missingCount,
   hasMoreMissing,
   onMoreMissing,
+  missingTier,
   missingMeta,
 }: InputsCardProps) {
   const FREE_MISSING_MAX = missingPreview.length; // derived from what Report passed in
@@ -116,16 +135,21 @@ export default function InputsCard({
           <>
             <div className="badgeRow" style={{ marginTop: 10 }}>
               {/* Free preview badges */}
-              {missingPreview.map((t) => (
-                <span
-                  key={t}
-                  className="badge"
-                  title={missingMeta?.[t] ?? undefined}
-                  style={{ cursor: missingMeta?.[t] ? "help" : undefined }}
-                >
-                  {t}
-                </span>
-              ))}
+              {missingPreview.map((t) => {
+                const tier = missingTier?.[normalizeKey(t)];
+                const cls = tierClass(tier);
+
+                return (
+                  <span
+                    key={t}
+                    className={`badge ${cls}`.trim()}
+                    title={missingMeta?.[t] ?? undefined}
+                    style={{ cursor: missingMeta?.[t] ? "help" : undefined }}
+                  >
+                    {t}
+                  </span>
+                );
+              })}
 
               {/* Gated affordance */}
               {hasMoreMissing && overflowCount > 0 && (

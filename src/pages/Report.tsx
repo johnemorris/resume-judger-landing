@@ -19,6 +19,27 @@ import { computeKeywordImportance } from "../utils/keywordImportance";
 
 const STORAGE_KEY = "rj_last_input_v1";
 
+type Tier = "high" | "med" | "low";
+
+function tierFromScore(
+  score: number,
+  strongest?: "strong" | "neutral" | "weak"
+): Tier {
+  // override based on language strength
+  if (strongest === "strong") return "high";
+  if (strongest === "weak") return "low";
+
+  // fallback thresholds (simple + stable for v1)
+  // score ~ occurrences with weight; strong occurrences inflate to 3
+  if (score >= 3) return "high";
+  if (score >= 1.5) return "med";
+  return "low";
+}
+
+function normKey(s: string) {
+  return (s || "").trim().toLowerCase();
+}
+
 export default function Report() {
   const r = mockReport;
 
@@ -50,7 +71,7 @@ export default function Report() {
       ? splitMatchedMissing(keywords, resume)
       : { matched: [], missing: [] };
 
-  // ⭐ NEW: importance-aware ordering
+  // Importance for ONLY missing (v1 focus)
   const importance = computeKeywordImportance(jd, missing);
 
   const missingSorted = [...missing].sort((a, b) => {
@@ -58,6 +79,14 @@ export default function Report() {
     const ib = importance.get(b)?.score ?? 0;
     return ib - ia;
   });
+
+  // Build tiers for UI (hide "why" for v1)
+  const missingTier: Record<string, Tier> = {};
+  for (const k of missingSorted) {
+    const info = importance.get(k);
+    const score = info?.score ?? 0;
+    missingTier[normKey(k)] = tierFromScore(score, info?.strongest);
+  }
 
   const missingPreview = missingSorted.slice(0, FREE_MISSING_MAX);
   const hasMoreMissing = missingSorted.length > FREE_MISSING_MAX;
@@ -91,6 +120,8 @@ export default function Report() {
           missingCount={missingSorted.length}
           hasMoreMissing={hasMoreMissing}
           onMoreMissing={() => setShowPaywall(true)}
+          missingTier={missingTier}
+          // v1: do NOT pass missingMeta (the "why") yet — keep behind paywall
         />
 
         <OverallMatchCard
@@ -99,17 +130,20 @@ export default function Report() {
         />
 
         <ScoreBreakdown entries={breakdownEntries} />
+
         <SurgicalEditsCard
           p0={p0}
           p1={p1}
           isPremium={false}
           onUpsell={() => setShowPaywall(true)}
         />
+
         <GapLearningPaths
           gaps={r.gapLearningPaths}
           isPremium={false}
           onUpsell={() => setShowPaywall(true)}
         />
+
         <RequirementsCoverageCard required={r.requirementsCoverage.required} />
         <InterviewLinksStub />
       </div>
